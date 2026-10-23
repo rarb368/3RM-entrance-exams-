@@ -1,0 +1,6 @@
+{
+  "name": "The 3RM Ethiopian Entrance Exam for AIBSBSS",
+  "description": "Ethiopian University Entrance Examination (EUEE) preparation platform for Ambo Ifa Boru Special Boarding Secondary School (AIBSBSS) students by REBIRA SISAY GITI (3RM).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
