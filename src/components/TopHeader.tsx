@@ -58,8 +58,8 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
 
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-bold text-base md:text-lg leading-tight tracking-wide line-clamp-1">
-                3RM Ethiopian Entrance Exam
+              <h1 className="font-bold text-sm sm:text-base md:text-lg leading-tight tracking-wide line-clamp-1">
+                Rebira's Ethiopian University Entrance Exam
               </h1>
               <span className="hidden sm:inline-block bg-teal-800/80 text-[11px] font-semibold px-2 py-0.5 rounded-md border border-teal-600/40">
                 AIBSBSS

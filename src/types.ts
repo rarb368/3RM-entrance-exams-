@@ -7,7 +7,7 @@ export type SubjectId =
   | 'english'
   | 'aptitude';
 
-export type ExamYear = '2017' | '2016' | '2015' | '2014/15';
+export type ExamYear = '2018' | '2017' | '2016' | '2015' | '2014' | '2013' | '2014/15';
 
 export type AnswerFeedbackMode = 'right_away' | 'after_finishing';
 
@@ -33,7 +33,11 @@ export interface Question {
   options: [string, string, string, string] | string[];
   correctAnswer: number; // 0 = A, 1 = B, 2 = C, 3 = D
   explanation: string;
+  passageTitle?: string;
+  passageText?: string;
   diagramSvg?: string;
+  diagramType?: string;
+  imageUrl?: string;
   subtopic?: string;
   isUnclassified?: boolean;
 }

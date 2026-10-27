@@ -1,6 +1,10 @@
 import { Question } from '../../types';
 
-export const APTITUDE_QUESTIONS: Question[] = [
+import { APTITUDE_2018_QUESTIONS } from "./aptitude2018";
+import { APTITUDE_2016_QUESTIONS } from "./aptitude2016";
+
+export const APTITUDE_2017_QUESTIONS: Question[] = [
+  // Unit 1: Verbal Reasoning & Word Analogies
   {
     id: 'apt-2017-01',
     subject: 'aptitude',
@@ -59,25 +63,6 @@ export const APTITUDE_QUESTIONS: Question[] = [
     explanation: 'Lema is Yaya\'s father. Yaya is Bali and Aki\'s mother. Therefore, Aki is Lema\'s female grandchild, i.e., granddaughter.'
   },
   {
-    id: 'apt-2017-04',
-    subject: 'aptitude',
-    grade: 12,
-    unit: 'Syllogisms & Logical Deductions',
-    unitNumber: 3,
-    topic: 'Categorical Syllogisms',
-    year: '2017',
-    questionNumber: 4,
-    question: 'Statement I: All football players are sportspersons.\nStatement II: All sportspersons are fit.\nEvaluating the conclusion: "Some football players are fit", this conclusion is:',
-    options: [
-      'Conclusion: Some football players are fit.',
-      'incorrect',
-      'reasonably correct (logically valid)',
-      'appropriate'
-    ],
-    correctAnswer: 2,
-    explanation: 'From "All football players are sportspersons" and "All sportspersons are fit", it deductively follows that "All football players are fit". By subalternation in classical logic, if all are fit, then necessarily some football players are fit.'
-  },
-  {
     id: 'apt-2017-05',
     subject: 'aptitude',
     grade: 12,
@@ -102,7 +87,7 @@ export const APTITUDE_QUESTIONS: Question[] = [
     grade: 12,
     unit: 'Verbal Reasoning & Word Analogies',
     unitNumber: 1,
-    topic: 'Word Analogies',
+    topic: 'Word Relationships',
     year: '2017',
     questionNumber: 19,
     question: 'AUTOMOBILE : GARAGE :: Airplane : ________',
@@ -121,7 +106,7 @@ export const APTITUDE_QUESTIONS: Question[] = [
     grade: 12,
     unit: 'Verbal Reasoning & Word Analogies',
     unitNumber: 1,
-    topic: 'Security Analogies',
+    topic: 'Word Relationships',
     year: '2017',
     questionNumber: 20,
     question: 'KEY : LOCK :: ________ : Computer',
@@ -134,13 +119,15 @@ export const APTITUDE_QUESTIONS: Question[] = [
     correctAnswer: 3,
     explanation: 'A physical key is required to gain authorized access to a mechanical lock. Analogously, a password is required to gain authorized access into a secured computer system.'
   },
+
+  // Unit 2: Quantitative Reasoning & Number Sequences
   {
     id: 'apt-2017-41',
     subject: 'aptitude',
     grade: 12,
     unit: 'Quantitative Reasoning & Number Sequences',
     unitNumber: 2,
-    topic: 'Pipe and Cistern Work Rates',
+    topic: 'Pipe and Tank Rates',
     year: '2017',
     questionNumber: 41,
     question: 'Two pipes A and B are used to fill a water tank. Pipe A can fill the tank in 3 hours, and pipe B can fill the same tank in 6 hours. How long will it take in hours to fill the tank if both pipes are opened simultaneously?',
@@ -159,7 +146,7 @@ export const APTITUDE_QUESTIONS: Question[] = [
     grade: 12,
     unit: 'Quantitative Reasoning & Number Sequences',
     unitNumber: 2,
-    topic: 'Exponents and Algebra',
+    topic: 'Arithmetic and Geometric Sequences',
     year: '2017',
     questionNumber: 49,
     question: 'If -x + 2y = 4, then what is the value of (25ʸ) / (5ˣ)?',
@@ -178,7 +165,7 @@ export const APTITUDE_QUESTIONS: Question[] = [
     grade: 12,
     unit: 'Quantitative Reasoning & Number Sequences',
     unitNumber: 2,
-    topic: 'Linear Systems and Calorie Burn',
+    topic: 'Work and Time Problems',
     year: '2017',
     questionNumber: 50,
     question: 'A woman burns 416 calories in an hour (60 minutes) at a fitness center. If she burns 10 calories per minute swimming and 6 calories per minute pedaling on a stationary bike, how many minutes did she spend swimming?',
@@ -190,5 +177,54 @@ export const APTITUDE_QUESTIONS: Question[] = [
     ],
     correctAnswer: 1,
     explanation: 'Let t = minutes swimming, then (60 - t) = minutes biking. 10t + 6(60 - t) = 416 => 10t + 360 - 6t = 416 => 4t = 56 => t = 14 minutes.'
+  },
+
+  // Unit 3: Syllogisms & Logical Deductions
+  {
+    id: 'apt-2017-04',
+    subject: 'aptitude',
+    grade: 12,
+    unit: 'Syllogisms & Logical Deductions',
+    unitNumber: 3,
+    topic: 'Premise-Conclusion Validity',
+    year: '2017',
+    questionNumber: 4,
+    question: 'Statement I: All football players are sportspersons.\nStatement II: All sportspersons are fit.\nEvaluating the conclusion: "Some football players are fit", this conclusion is:',
+    options: [
+      'Conclusion: Some football players are fit.',
+      'incorrect',
+      'reasonably correct (logically valid)',
+      'appropriate'
+    ],
+    correctAnswer: 2,
+    explanation: 'From "All football players are sportspersons" and "All sportspersons are fit", it deductively follows that "All football players are fit". By subalternation in classical logic, if all are fit, then necessarily some football players are fit.'
+  },
+
+  // Unit 4: Spatial & Diagrammatic Analysis (WITH DIAGRAM)
+  {
+    id: 'apt-2017-36',
+    subject: 'aptitude',
+    grade: 12,
+    unit: 'Spatial & Diagrammatic Analysis',
+    unitNumber: 4,
+    topic: 'Counting Geometric Triangles',
+    year: '2017',
+    questionNumber: 36,
+    question: 'Refer to the geometric diagram below showing a square intersected by its diagonals and middle bisectors. How many triangles of all sizes can you find in the figure?',
+    diagramType: 'triangles-puzzle',
+    options: [
+      '8',
+      '12',
+      '16',
+      '20'
+    ],
+    correctAnswer: 2,
+    explanation: 'Breakdown of triangles: 8 single smallest triangles, 4 medium triangles formed by pairs across the axes, and 4 large half-square triangles formed across the two diagonals. Total = 8 + 4 + 4 = 16 triangles.'
   }
+];
+
+export const APTITUDE_QUESTIONS: Question[] = [
+  ...APTITUDE_2018_QUESTIONS,
+  ...APTITUDE_2017_QUESTIONS,
+  ...APTITUDE_2016_QUESTIONS,
 ];

@@ -125,12 +125,12 @@ export const SUBJECT_ORDER: SubjectId[] = [
   'aptitude',
 ];
 
-export const AVAILABLE_YEARS = ['2017', '2016', '2015', '2014/15'] as const;
+export const AVAILABLE_YEARS = ['2018', '2017', '2016', '2015', '2014', '2013'] as const;
 
 export const SCHOOL_INFO = {
   fullName: 'Ambo Ifa Boru Special Boarding Secondary School',
   shortName: 'AIBSBSS',
-  examName: 'The 3RM Ethiopian Entrance Exam for AIBSBSS',
+  examName: "Rebira's Ethiopian University Entrance Exam",
   developer: 'REBIRA SISAY GITI (3RM)',
   contactEmail: 'rarb368@gmail.com',
   telegramChannel: 'https://t.me/rebiraentranceexam',

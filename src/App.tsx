@@ -200,6 +200,7 @@ export default function App() {
             selectedYear={selectedYear}
             onSelectYear={setSelectedYear}
             onSelectSubject={handleSelectSubject}
+            onOpenAdmin={() => handleSelectBottomTab('admin')}
           />
         )}
 
@@ -334,7 +335,7 @@ export default function App() {
                 className="w-full p-3 rounded-xl hover:bg-teal-50 text-teal-900 flex items-center gap-3 font-semibold transition cursor-pointer text-left"
               >
                 <ShieldCheck className="w-5 h-5 text-[#00897b]" />
-                <span>Admin Console (@Rabira1818)</span>
+                <span>Admin Console</span>
               </button>
 
               <div className="pt-4 border-t my-4 text-xs text-slate-500 space-y-2">

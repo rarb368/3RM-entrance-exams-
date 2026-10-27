@@ -27,6 +27,7 @@ import {
 } from '../types';
 import { SUBJECT_CONFIGS, formatDurationHHMMSS } from '../data/subjectConfig';
 import { StorageService } from '../utils/storage';
+import { DiagramViewer } from './DiagramViewer';
 
 interface ExamScreenProps {
   subjectId: SubjectId;
@@ -346,58 +347,88 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({
               className="bg-white rounded-xl p-4 shadow-sm border border-slate-200/90 scroll-mt-20"
             >
               {/* Question Header: Number on Left, "Improve" on Right (matching screenshot) */}
-              <div className="flex items-center justify-between border-b border-[#e91e63]/40 pb-1.5 mb-2.5">
-                <span className="font-extrabold text-base text-slate-900">
-                  {idx + 1}
-                </span>
+              <div className="flex items-center justify-between border-b border-[#e91e63]/40 pb-2 mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="font-black text-xl sm:text-2xl text-slate-900 tracking-tight">
+                    {idx + 1}
+                  </span>
+                  {q.topic && (
+                    <span className="bg-teal-50 text-teal-800 text-[11px] px-2.5 py-0.5 rounded-full font-semibold border border-teal-200">
+                      {q.topic}
+                    </span>
+                  )}
+                </div>
                 <span className="text-xs text-slate-400 hover:text-slate-600 font-medium cursor-pointer">
                   Improve
                 </span>
               </div>
 
-              {/* Question Text */}
-              <p className="text-slate-900 text-sm font-medium leading-relaxed mb-3 whitespace-pre-line">
+              {/* Reading Passage Card if question belongs to a passage */}
+              {q.passageText && (
+                <div className="mb-4 p-4 rounded-xl bg-amber-50/80 border border-amber-200/90 text-slate-800 shadow-2xs">
+                  <div className="flex items-center gap-2 font-bold text-amber-950 text-sm mb-2 border-b border-amber-200/60 pb-1.5">
+                    <BookOpen className="w-4 h-4 text-amber-700" />
+                    <span>{q.passageTitle || 'Reading Comprehension Passage'}</span>
+                  </div>
+                  <div className="text-xs sm:text-sm leading-relaxed whitespace-pre-line text-slate-800 font-normal space-y-2 max-h-72 overflow-y-auto pr-1">
+                    {q.passageText}
+                  </div>
+                </div>
+              )}
+
+              {/* Question Text - Increased Font Size */}
+              <p className="text-slate-900 text-lg sm:text-xl font-bold leading-relaxed mb-4 whitespace-pre-line">
                 {q.question}
               </p>
 
-              {/* Options with EXACT Solidity and Styling matching screenshot ethiomatric_1792390847_2dd03890.jpg */}
-              <div className="space-y-2 mb-2">
+              {/* Diagram / Image if question has visual asset */}
+              {(q.diagramType || q.diagramSvg || q.imageUrl) && (
+                <DiagramViewer
+                  diagramType={q.diagramType}
+                  diagramSvg={q.diagramSvg}
+                  imageUrl={q.imageUrl}
+                />
+              )}
+
+              {/* Options with Increased Font Size and EXACT Solidity matching screenshot */}
+              <div className="space-y-2.5 mb-2">
                 {q.options.map((optionText, optIdx) => {
                   const isUserSelection = selectedOption === optIdx;
                   const isCorrectAnswer = optIdx === q.correctAnswer;
+                  const optionLetter = String.fromCharCode(65 + optIdx);
 
                   // Determine background and solidity
                   let containerClasses =
-                    'w-full py-2.5 px-3 rounded-md text-left text-xs sm:text-sm flex items-center justify-between transition-colors cursor-pointer border border-transparent';
+                    'w-full py-3.5 px-4 rounded-xl text-left flex items-center justify-between transition-colors cursor-pointer border border-transparent';
                   let radioCircleClasses =
-                    'w-4 h-4 rounded-full border border-slate-400 mr-2.5 flex items-center justify-center shrink-0';
+                    'w-6 h-6 rounded-full border-2 border-slate-400 mr-3 flex items-center justify-center shrink-0 font-black text-xs sm:text-sm';
 
                   if (isRightAway && isAnswered) {
                     if (isCorrectAnswer) {
                       // Solid Green Bar (same solidity as image: #81c784)
                       containerClasses =
-                        'w-full py-2.5 px-3 rounded-md text-left text-xs sm:text-sm flex items-center justify-between bg-[#81c784] text-slate-950 font-medium shadow-xs';
+                        'w-full py-3.5 px-4 rounded-xl text-left flex items-center justify-between bg-[#81c784] text-slate-950 font-bold shadow-xs';
                       radioCircleClasses =
-                        'w-4 h-4 rounded-full bg-[#388e3c] border-2 border-white mr-2.5 flex items-center justify-center shrink-0';
+                        'w-6 h-6 rounded-full bg-[#388e3c] border-2 border-white text-white mr-3 flex items-center justify-center shrink-0 font-black text-xs sm:text-sm';
                     } else if (isUserSelection) {
                       // Solid Salmon-Red Bar (same solidity as image: #ef9a9a)
                       containerClasses =
-                        'w-full py-2.5 px-3 rounded-md text-left text-xs sm:text-sm flex items-center justify-between bg-[#ef9a9a] text-slate-950 font-medium shadow-xs';
+                        'w-full py-3.5 px-4 rounded-xl text-left flex items-center justify-between bg-[#ef9a9a] text-slate-950 font-bold shadow-xs';
                       radioCircleClasses =
-                        'w-4 h-4 rounded-full bg-[#d32f2f] border-2 border-white mr-2.5 flex items-center justify-center shrink-0';
+                        'w-6 h-6 rounded-full bg-[#d32f2f] border-2 border-white text-white mr-3 flex items-center justify-center shrink-0 font-black text-xs sm:text-sm';
                     } else {
                       containerClasses =
-                        'w-full py-2.5 px-3 rounded-md text-left text-xs sm:text-sm flex items-center justify-between bg-white text-slate-600 hover:bg-slate-50';
+                        'w-full py-3.5 px-4 rounded-xl text-left flex items-center justify-between bg-white text-slate-700 hover:bg-slate-50 border border-slate-200/80';
                     }
                   } else if (isUserSelection) {
                     // In After Finishing mode: clean selection highlight
                     containerClasses =
-                      'w-full py-2.5 px-3 rounded-md text-left text-xs sm:text-sm flex items-center justify-between bg-teal-50 border-teal-500 text-teal-950 font-medium';
+                      'w-full py-3.5 px-4 rounded-xl text-left flex items-center justify-between bg-teal-50 border-2 border-teal-600 text-teal-950 font-bold';
                     radioCircleClasses =
-                      'w-4 h-4 rounded-full bg-[#00897b] border-2 border-white mr-2.5 flex items-center justify-center shrink-0';
+                      'w-6 h-6 rounded-full bg-[#00897b] border-2 border-white text-white mr-3 flex items-center justify-center shrink-0 font-black text-xs sm:text-sm';
                   } else {
                     containerClasses =
-                      'w-full py-2.5 px-3 rounded-md text-left text-xs sm:text-sm flex items-center justify-between bg-white text-slate-800 hover:bg-slate-50';
+                      'w-full py-3.5 px-4 rounded-xl text-left flex items-center justify-between bg-white text-slate-900 hover:bg-slate-50 border border-slate-200/90';
                   }
 
                   return (
@@ -410,11 +441,9 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({
                     >
                       <div className="flex items-center min-w-0 flex-1 pr-2">
                         <div className={radioCircleClasses}>
-                          {isUserSelection && (
-                            <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                          )}
+                          <span>{optionLetter}</span>
                         </div>
-                        <span className="leading-snug text-slate-900">
+                        <span className="leading-snug font-bold text-slate-950 text-base sm:text-lg">
                           {optionText}
                         </span>
                       </div>

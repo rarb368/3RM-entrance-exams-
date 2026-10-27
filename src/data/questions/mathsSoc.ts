@@ -1,6 +1,6 @@
 import { Question } from '../../types';
 
-export const MATHS_SOC_QUESTIONS: Question[] = [
+const MATHS_SOC_BASE_QUESTIONS: Question[] = [
   {
     id: 'msoc-2017-01',
     subject: 'maths_soc',
@@ -121,4 +121,15 @@ export const MATHS_SOC_QUESTIONS: Question[] = [
     correctAnswer: 1,
     explanation: 'Gross Price = Net Price × (1 + VAT rate) = Net Price × 1.15. Therefore: Net Price = Gross Price / 1.15 = 46,000 / 1.15 = 40,000 Birr. (Note: calculating 15% of 46,000 and subtracting it is a common error: 46,000 - 6,900 = 39,100 is incorrect because VAT is calculated on the net amount).'
   }
+];
+
+import { MATHS_2018_QUESTIONS } from './maths2018';
+
+export const MATHS_SOC_QUESTIONS: Question[] = [
+  ...MATHS_SOC_BASE_QUESTIONS,
+  ...MATHS_2018_QUESTIONS.map((q) => ({
+    ...q,
+    id: q.id.replace('math-', 'msoc-'),
+    subject: 'maths_soc' as const,
+  })),
 ];

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { ExamAttempt, Question } from '../types';
 import { SUBJECT_CONFIGS, formatDurationHHMMSS } from '../data/subjectConfig';
+import { DiagramViewer } from './DiagramViewer';
 
 interface ResultsScreenProps {
   attempt: ExamAttempt;
@@ -322,17 +323,26 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
               </div>
 
               {/* Question Text */}
-              <p className="text-sm text-slate-900 font-medium leading-relaxed mb-3 whitespace-pre-line">
+              <p className="text-base sm:text-lg text-slate-900 font-bold leading-relaxed mb-4 whitespace-pre-line">
                 {q.question}
               </p>
 
+              {/* Diagram / Image if present */}
+              {(q.diagramType || q.diagramSvg || q.imageUrl) && (
+                <DiagramViewer
+                  diagramType={q.diagramType}
+                  diagramSvg={q.diagramSvg}
+                  imageUrl={q.imageUrl}
+                />
+              )}
+
               {/* Options */}
-              <div className="space-y-2 mb-4">
+              <div className="space-y-2.5 mb-4">
                 {q.options.map((optText, optIdx) => {
                   const isCorrectChoice = optIdx === q.correctAnswer;
                   const isUserSelection = selectedOption === optIdx;
 
-                  let optBg = 'bg-slate-50 border-slate-200 text-slate-700';
+                  let optBg = 'bg-slate-50 border-slate-200 text-slate-800';
                   if (isCorrectChoice) {
                     optBg = 'bg-emerald-50 border-emerald-400 text-emerald-950 font-bold ring-1 ring-emerald-400';
                   } else if (isUserSelection) {
@@ -342,19 +352,19 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({
                   return (
                     <div
                       key={optIdx}
-                      className={`p-3 rounded-xl border text-xs sm:text-sm flex items-start gap-2.5 ${optBg}`}
+                      className={`p-3.5 rounded-xl border text-sm sm:text-base font-semibold flex items-start gap-3 ${optBg}`}
                     >
-                      <span className="font-bold w-5 shrink-0">
+                      <span className="font-extrabold w-6 shrink-0">
                         {optionLetters[optIdx]}.
                       </span>
                       <span className="flex-1">{optText}</span>
                       {isCorrectChoice && (
-                        <span className="text-emerald-700 font-bold text-xs shrink-0">
+                        <span className="text-emerald-700 font-extrabold text-xs sm:text-sm shrink-0">
                           (Verified Answer)
                         </span>
                       )}
                       {isUserSelection && !isCorrectChoice && (
-                        <span className="text-rose-600 font-semibold text-xs shrink-0">
+                        <span className="text-rose-600 font-bold text-xs sm:text-sm shrink-0">
                           (Your Choice)
                         </span>
                       )}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Calendar, Award, CheckCircle, TrendingUp, Sparkles } from 'lucide-react';
 import { ExamYear, StudentProfile, SubjectId } from '../types';
 import { AVAILABLE_YEARS, SUBJECT_CONFIGS, SUBJECT_ORDER } from '../data/subjectConfig';
@@ -10,6 +10,7 @@ interface DashboardProps {
   selectedYear: ExamYear | 'all';
   onSelectYear: (year: ExamYear | 'all') => void;
   onSelectSubject: (subjectId: SubjectId) => void;
+  onOpenAdmin?: () => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -17,6 +18,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   selectedYear,
   onSelectYear,
   onSelectSubject,
+  onOpenAdmin,
 }) => {
   const attempts = StorageService.getAttempts();
   const totalCompleted = attempts.length;
@@ -24,6 +26,24 @@ export const Dashboard: React.FC<DashboardProps> = ({
     totalCompleted > 0
       ? Math.round(attempts.reduce((sum, a) => sum + a.scorePercentage, 0) / totalCompleted)
       : 0;
+
+  const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
+
+  const handleYearClick = (year: ExamYear) => {
+    if (year !== '2018' && year !== '2017' && year !== '2016') {
+      setNoticeMessage("Rebira will add this year's questions soon.");
+      return;
+    }
+    onSelectYear(year);
+  };
+
+  const handleSubjectClick = (subjectId: SubjectId) => {
+    if (subjectId === 'maths_soc') {
+      setNoticeMessage("Rebira will add this questions soon.");
+      return;
+    }
+    onSelectSubject(subjectId);
+  };
 
   return (
     <div className="pb-24 pt-3 px-4 max-w-4xl mx-auto">
@@ -93,7 +113,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           {AVAILABLE_YEARS.map((year) => (
             <button
               key={year}
-              onClick={() => onSelectYear(year)}
+              onClick={() => handleYearClick(year)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all shrink-0 cursor-pointer ${
                 selectedYear === year
                   ? 'bg-[#00897b] text-white shadow-xs'
@@ -122,7 +142,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <SubjectCard
             key={subjectId}
             config={SUBJECT_CONFIGS[subjectId]}
-            onSelect={onSelectSubject}
+            onSelect={handleSubjectClick}
           />
         ))}
       </div>
@@ -135,7 +155,42 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <p className="text-[11px] text-slate-500 mt-0.5">
           Dedicated to academic excellence and national university entrance success.
         </p>
+
+        {/* Admin Section Link */}
+        {onOpenAdmin && (
+          <div className="mt-4 pt-3 border-t border-slate-200/60">
+            <button
+              onClick={onOpenAdmin}
+              className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-teal-700 font-medium px-3 py-1.5 rounded-lg hover:bg-slate-200/50 transition cursor-pointer"
+            >
+              <span>Administrator Portal</span>
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Notice Dialog from Rebira Sisay Giti for other years */}
+      {noticeMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-sm rounded-3xl bg-white shadow-2xl border border-slate-100 p-6 text-center animate-in fade-in zoom-in-95">
+            <div className="w-16 h-16 mx-auto mb-3.5 rounded-2xl bg-teal-50 text-[#00897b] flex items-center justify-center font-black text-2xl border border-teal-200/80 shadow-xs">
+              3RM
+            </div>
+            <h3 className="font-bold text-base text-slate-900 mb-2">
+              Notice from Rebira Sisay Giti (3RM)
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-600 mb-5 leading-relaxed">
+              {noticeMessage}
+            </p>
+            <button
+              onClick={() => setNoticeMessage(null)}
+              className="w-full py-3 rounded-xl bg-[#00897b] hover:bg-[#00796b] text-white font-bold text-xs sm:text-sm shadow-md transition active:scale-95 cursor-pointer"
+            >
+              GOT IT
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
