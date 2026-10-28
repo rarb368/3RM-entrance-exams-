@@ -23,12 +23,73 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({ diagramType, diagr
     );
   }
 
-  if (diagramSvg) {
+  if (diagramSvg && diagramSvg.startsWith('<svg')) {
     return (
       <div
         className="my-3 p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center overflow-x-auto"
         dangerouslySetInnerHTML={{ __html: diagramSvg }}
       />
+    );
+  }
+
+  if (diagramSvg === 'aptitude2017_bargraph_q46' || diagramType === 'aptitude2017_bargraph_q46') {
+    return (
+      <div className="my-3 p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col items-center">
+        <svg className="w-80 h-64 max-w-full" viewBox="0 0 360 250" fill="none">
+          <text x="180" y="22" textAnchor="middle" fill="#0f172a" fontSize="13" fontWeight="bold">
+            Study Patterns of a Student (Recorded for 32 Days)
+          </text>
+          {/* Y Axis Grid lines */}
+          {[0, 2, 4, 6, 8, 10].map((val) => {
+            const y = 190 - val * 15;
+            return (
+              <g key={val}>
+                <line x1="50" y1={y} x2="330" y2={y} stroke="#e2e8f0" strokeDasharray="2,2" />
+                <text x="42" y={y + 4} textAnchor="end" fill="#64748b" fontSize="10">{val}</text>
+              </g>
+            );
+          })}
+          {/* Axes */}
+          <line x1="50" y1="40" x2="50" y2="190" stroke="#334155" strokeWidth="2" />
+          <line x1="50" y1="190" x2="330" y2="190" stroke="#334155" strokeWidth="2" />
+          {/* Y-axis label */}
+          <text x="18" y="115" fill="#475569" fontSize="11" fontWeight="600" transform="rotate(-90 18 115)" textAnchor="middle">
+            Number of days
+          </text>
+          {/* X-axis label */}
+          <text x="190" y="235" textAnchor="middle" fill="#475569" fontSize="11" fontWeight="600">
+            Amount of study (Hours)
+          </text>
+
+          {/* Bar 1: 2 hours -> 10 days */}
+          <rect x="70" y={190 - 10 * 15} width="36" height={10 * 15} fill="#334155" rx="3" />
+          <text x="88" y={190 - 10 * 15 - 5} textAnchor="middle" fill="#0f172a" fontSize="11" fontWeight="bold">10</text>
+          <text x="88" y="208" textAnchor="middle" fill="#334155" fontSize="10" fontWeight="600">2 hours</text>
+
+          {/* Bar 2: 4 hours -> 7 days */}
+          <rect x="122" y={190 - 7 * 15} width="36" height={7 * 15} fill="#475569" rx="3" />
+          <text x="140" y={190 - 7 * 15 - 5} textAnchor="middle" fill="#0f172a" fontSize="11" fontWeight="bold">7</text>
+          <text x="140" y="208" textAnchor="middle" fill="#334155" fontSize="10" fontWeight="600">4 hours</text>
+
+          {/* Bar 3: 6 hours -> 7 days */}
+          <rect x="174" y={190 - 7 * 15} width="36" height={7 * 15} fill="#475569" rx="3" />
+          <text x="192" y={190 - 7 * 15 - 5} textAnchor="middle" fill="#0f172a" fontSize="11" fontWeight="bold">7</text>
+          <text x="192" y="208" textAnchor="middle" fill="#334155" fontSize="10" fontWeight="600">6 hours</text>
+
+          {/* Bar 4: 8 hours -> 5 days */}
+          <rect x="226" y={190 - 5 * 15} width="36" height={5 * 15} fill="#64748b" rx="3" />
+          <text x="244" y={190 - 5 * 15 - 5} textAnchor="middle" fill="#0f172a" fontSize="11" fontWeight="bold">5</text>
+          <text x="244" y="208" textAnchor="middle" fill="#334155" fontSize="10" fontWeight="600">8 hours</text>
+
+          {/* Bar 5: 10 hours -> 3 days */}
+          <rect x="278" y={190 - 3 * 15} width="36" height={3 * 15} fill="#94a3b8" rx="3" />
+          <text x="296" y={190 - 3 * 15 - 5} textAnchor="middle" fill="#0f172a" fontSize="11" fontWeight="bold">3</text>
+          <text x="296" y="208" textAnchor="middle" fill="#334155" fontSize="10" fontWeight="600">10 hours</text>
+        </svg>
+        <span className="text-[11px] text-slate-500 font-semibold mt-1">
+          Figure: Students' Study Pattern Recorded for 32 Days
+        </span>
+      </div>
     );
   }
 

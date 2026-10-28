@@ -3,6 +3,7 @@ import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
+import { GoogleGenAI } from '@google/genai';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,6 +21,15 @@ if (!fs.existsSync(DB_DIR)) {
   fs.mkdirSync(DB_DIR, { recursive: true });
 }
 
+export interface AdminMessage {
+  id: string;
+  sender: string;
+  recipient: string; // 'all' or student email
+  title: string;
+  text: string;
+  createdAt: string;
+}
+
 interface DatabaseSchema {
   students: Record<string, {
     fullName: string;
@@ -31,18 +41,25 @@ interface DatabaseSchema {
   }>;
   attempts: any[];
   customQuestions: any[];
+  messages: AdminMessage[];
 }
 
 function readDatabase(): DatabaseSchema {
   try {
     if (fs.existsSync(DB_FILE)) {
       const content = fs.readFileSync(DB_FILE, 'utf-8');
-      return JSON.parse(content);
+      const parsed = JSON.parse(content);
+      return {
+        students: parsed.students || {},
+        attempts: parsed.attempts || [],
+        customQuestions: parsed.customQuestions || [],
+        messages: parsed.messages || [],
+      };
     }
   } catch (e) {
     console.error('Error reading database file', e);
   }
-  return { students: {}, attempts: [], customQuestions: [] };
+  return { students: {}, attempts: [], customQuestions: [], messages: [] };
 }
 
 function writeDatabase(data: DatabaseSchema): void {
@@ -217,6 +234,86 @@ app.delete('/api/admin/questions/:id', authenticateAdmin, (req: Request, res: Re
     writeDatabase(db);
   }
   return res.json({ success: true });
+});
+
+// 7. Admin: Send Announcement / Message to Students
+app.post('/api/admin/messages', authenticateAdmin, (req: Request, res: Response) => {
+  const { recipient, title, text } = req.body;
+  if (!text || !text.trim()) {
+    return res.status(400).json({ success: false, error: 'Message text cannot be empty' });
+  }
+
+  const db = readDatabase();
+  const newMessage: AdminMessage = {
+    id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+    sender: 'Rebira Sisay Giti (Admin)',
+    recipient: recipient?.trim() || 'all',
+    title: title?.trim() || 'Notice from Admin',
+    text: text.trim(),
+    createdAt: new Date().toISOString(),
+  };
+
+  db.messages.unshift(newMessage);
+  writeDatabase(db);
+  return res.json({ success: true, message: newMessage });
+});
+
+// 8. Public / Student: Fetch Messages
+app.get('/api/messages', (req: Request, res: Response) => {
+  const email = (req.query.email as string)?.toLowerCase();
+  const db = readDatabase();
+  const filtered = (db.messages || []).filter(
+    (m) => m.recipient === 'all' || (email && m.recipient.toLowerCase() === email)
+  );
+  return res.json({ success: true, messages: filtered });
+});
+
+// 9. 3RM AI Study Assistant (Gemini API Integration)
+app.post('/api/ai/ask', async (req: Request, res: Response) => {
+  try {
+    const { prompt, questionContext, subject } = req.body;
+    if (!prompt || typeof prompt !== 'string') {
+      return res.status(400).json({ success: false, error: 'Prompt is required' });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.json({
+        success: true,
+        reply: `Hello! I am your 3RM AI Study Assistant for Ambo Ifa Boru Special Boarding Secondary School (AIBSBSS).
+
+Regarding your inquiry: "${prompt}":
+1. Carefully identify the given values and equations.
+2. Recall the relevant Ethiopian curriculum principle for ${subject || 'this subject'}.
+3. Work through each alternative step-by-step to arrive at the verified solution.`,
+      });
+    }
+
+    const ai = new GoogleGenAI();
+    let fullPrompt = prompt;
+    if (questionContext) {
+      fullPrompt = `[Context of Current Exam Question: Subject: ${questionContext.subject || ''}, Question: ${questionContext.question || ''}, Options: ${JSON.stringify(questionContext.options || [])}]\n\nStudent question / request: ${prompt}`;
+    }
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.8-flash',
+      contents: fullPrompt,
+      config: {
+        systemInstruction: `You are the "3RM AI Study Assistant", an expert, encouraging Ethiopian University Entrance Examination (EUEE) tutor created for students at Ambo Ifa Boru Special Boarding Secondary School (AIBSBSS) by developer Rebira Sisay Giti (3RM).
+Help Ethiopian students master secondary school Natural Science (Biology, Chemistry, Physics, Mathematics) and Social Science (English, Scholastic Aptitude Test).
+Provide clear, step-by-step explanations, helpful hints without giving away answers immediately if they are practicing, and highlight key curriculum concepts. Keep responses structured, concise, and easy to read on mobile devices.`,
+      },
+    });
+
+    const reply = response.text || 'I could not generate an answer right now. Please try again.';
+    return res.json({ success: true, reply });
+  } catch (err: any) {
+    console.error('Gemini AI Assistant error:', err);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to process AI request. ' + (err?.message || ''),
+    });
+  }
 });
 
 // Start server with Vite middleware in development

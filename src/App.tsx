@@ -13,7 +13,7 @@ import {
   Question,
 } from './types';
 import { StorageService } from './utils/storage';
-import { TopHeader } from './components/TopHeader';
+import { TopHeader, RealTelegramIcon } from './components/TopHeader';
 import { BottomNav } from './components/BottomNav';
 import { RegistrationModal } from './components/RegistrationModal';
 import { Dashboard } from './components/Dashboard';
@@ -23,9 +23,11 @@ import { ResultsScreen } from './components/ResultsScreen';
 import { ContactUsPage } from './components/ContactUsPage';
 import { ProfileModal } from './components/ProfileModal';
 import { AdminSection } from './components/AdminSection';
+import { NotificationsModal, AdminNotice } from './components/NotificationsModal';
+import { AiAssistantModal } from './components/AiAssistantModal';
 import { getQuestionsForExam, getQuestionsForUnit } from './data/allQuestions';
 import { SCHOOL_INFO } from './data/subjectConfig';
-import { BookOpen, GraduationCap, School, User, Award, ShieldCheck, Lock } from 'lucide-react';
+import { BookOpen, GraduationCap, School, User, Sparkles } from 'lucide-react';
 
 export default function App() {
   const [profile, setProfile] = useState<StudentProfile | null>(() =>
@@ -36,6 +38,18 @@ export default function App() {
   });
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isMenuDrawerOpen, setIsMenuDrawerOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
+
+  // Admin Announcements / Notices
+  const [adminNotices, setAdminNotices] = useState<AdminNotice[]>([]);
+  const [readMessageIds, setReadMessageIds] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('3rm_read_message_ids') || '[]');
+    } catch {
+      return [];
+    }
+  });
 
   // Navigation states: 'home' | 'contact' | 'admin'
   const [currentBottomTab, setCurrentBottomTab] = useState<'home' | 'contact' | 'admin'>('home');
@@ -65,30 +79,31 @@ export default function App() {
     questions: Question[];
   } | null>(null);
 
-  // Check for restored in-progress exam session on mount
-  useEffect(() => {
-    const savedSession = StorageService.getActiveSession();
-    if (savedSession && savedSession.questionIds?.length > 0) {
-      const questions = savedSession.isUnitPractice && savedSession.unitTitle
-        ? getQuestionsForUnit(savedSession.subject, savedSession.unitTitle)
-        : getQuestionsForExam(savedSession.subject, savedSession.year);
-
-      if (questions.length > 0) {
-        setActiveExamData({
-          subjectId: savedSession.subject,
-          year: savedSession.year,
-          unitTitle: savedSession.unitTitle,
-          grade: savedSession.grade,
-          topicTitle: savedSession.topicTitle,
-          isUnitPractice: savedSession.isUnitPractice,
-          mode: savedSession.feedbackMode,
-          questions,
-          timeSeconds: savedSession.totalDurationSeconds,
-        });
-        setCurrentView('exam');
+  // Fetch admin messages
+  const fetchAdminMessages = async () => {
+    try {
+      const email = profile?.email || '';
+      const res = await fetch(`/api/messages?email=${encodeURIComponent(email)}`);
+      const data = await res.json();
+      if (data.success && data.messages) {
+        setAdminNotices(data.messages);
       }
-    }
-  }, []);
+    } catch {}
+  };
+
+  useEffect(() => {
+    fetchAdminMessages();
+    const interval = setInterval(fetchAdminMessages, 30000);
+    return () => clearInterval(interval);
+  }, [profile?.email]);
+
+  const unreadCount = adminNotices.filter((m) => !readMessageIds.includes(m.id)).length;
+
+  const handleMarkAllRead = () => {
+    const allIds = adminNotices.map((m) => m.id);
+    setReadMessageIds(allIds);
+    localStorage.setItem('3rm_read_message_ids', JSON.stringify(allIds));
+  };
 
   const handleRegistered = (newProfile: StudentProfile) => {
     setProfile(newProfile);
@@ -101,6 +116,7 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Start Exam: Always clears stale session so student starts fresh
   const handleStartExam = (params: {
     subjectId: SubjectId;
     year?: ExamYear;
@@ -111,12 +127,17 @@ export default function App() {
     mode: AnswerFeedbackMode;
     timeSeconds?: number;
   }) => {
-    const questions = params.isUnitPractice && params.unitTitle
-      ? getQuestionsForUnit(params.subjectId, params.unitTitle)
-      : getQuestionsForExam(params.subjectId, params.year);
+    StorageService.clearActiveSession();
+
+    let questions: Question[] = [];
+    if (params.isUnitPractice && params.unitTitle) {
+      questions = getQuestionsForUnit(params.subjectId, params.unitTitle);
+    } else {
+      questions = getQuestionsForExam(params.subjectId, params.year);
+    }
 
     if (questions.length === 0) {
-      alert('This examination paper is currently awaiting digitization. Please select another year or curriculum unit.');
+      alert('This examination paper is currently awaiting digitization. Please select another year or category.');
       return;
     }
 
@@ -144,6 +165,7 @@ export default function App() {
     if (activeResultData) {
       const q = activeResultData.questions;
       const att = activeResultData.attempt;
+      StorageService.clearActiveSession();
       setActiveExamData({
         subjectId: att.subject,
         year: att.year,
@@ -161,11 +183,19 @@ export default function App() {
     }
   };
 
+  // When quitting or returning from exam / category practice, return to category if it was unit practice!
   const handleReturnHome = () => {
+    const wasUnit = activeResultData?.attempt.isUnitPractice;
+    const sub = activeResultData?.attempt.subject;
     setActiveResultData(null);
     setActiveExamData(null);
-    setCurrentBottomTab('home');
-    setCurrentView('dashboard');
+    if (wasUnit && sub) {
+      setSelectedSubject(sub);
+      setCurrentView('subject');
+    } else {
+      setCurrentBottomTab('home');
+      setCurrentView('dashboard');
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -187,6 +217,8 @@ export default function App() {
       {currentView !== 'exam' && currentView !== 'subject' && (
         <TopHeader
           studentProfile={profile}
+          unreadCount={unreadCount}
+          onOpenNotifications={() => setIsNotificationsOpen(true)}
           onOpenMenu={() => setIsMenuDrawerOpen(true)}
           onOpenProfile={() => setIsProfileModalOpen(true)}
         />
@@ -226,8 +258,16 @@ export default function App() {
             timeSeconds={activeExamData.timeSeconds}
             onFinishExam={handleFinishExam}
             onExitExam={() => {
+              const wasUnit = activeExamData.isUnitPractice;
+              const subId = activeExamData.subjectId;
+              StorageService.clearActiveSession();
               setActiveExamData(null);
-              setCurrentView('dashboard');
+              if (wasUnit) {
+                setSelectedSubject(subId);
+                setCurrentView('subject');
+              } else {
+                setCurrentView('dashboard');
+              }
             }}
           />
         )}
@@ -248,7 +288,34 @@ export default function App() {
         )}
       </main>
 
-      {/* Fixed Bottom Navigation: exactly HOME | CONTACT US | ADMIN */}
+      {/* Floating 3RM AI Assistant Trigger Button on Home/Category screens */}
+      {currentView !== 'exam' && currentView !== 'admin' && (
+        <button
+          onClick={() => setIsAiAssistantOpen(true)}
+          title="Ask 3RM AI Assistant"
+          aria-label="3RM AI Assistant"
+          className="fixed right-3 sm:right-5 bottom-20 z-40 w-12 h-12 rounded-full bg-[#00897b] hover:bg-[#00796b] text-white shadow-xl flex items-center justify-center border-2 border-white/90 active:scale-95 transition-all cursor-pointer group hover:ring-4 hover:ring-teal-200"
+        >
+          <Sparkles className="w-6 h-6 text-amber-300 group-hover:rotate-12 transition-transform" />
+        </button>
+      )}
+
+      {/* 3RM AI Assistant Modal */}
+      <AiAssistantModal
+        isOpen={isAiAssistantOpen}
+        onClose={() => setIsAiAssistantOpen(false)}
+        subjectTitle={selectedSubject ? SCHOOL_INFO.examName : undefined}
+      />
+
+      {/* Admin Notifications Modal */}
+      <NotificationsModal
+        isOpen={isNotificationsOpen}
+        onClose={() => setIsNotificationsOpen(false)}
+        notifications={adminNotices}
+        onMarkAllRead={handleMarkAllRead}
+      />
+
+      {/* Fixed Bottom Navigation: exactly HOME | CONTACT US */}
       {currentView !== 'exam' && (
         <BottomNav
           currentTab={currentBottomTab}
@@ -326,17 +393,17 @@ export default function App() {
                 <span>Contact Developer & School</span>
               </button>
 
-              <button
-                onClick={() => {
-                  setIsMenuDrawerOpen(false);
-                  setCurrentBottomTab('admin');
-                  setCurrentView('admin');
-                }}
-                className="w-full p-3 rounded-xl hover:bg-teal-50 text-teal-900 flex items-center gap-3 font-semibold transition cursor-pointer text-left"
+              {/* Join Us on Telegram (Replaced Admin Console as requested) */}
+              <a
+                href="https://t.me/rebiraentranceexam"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setIsMenuDrawerOpen(false)}
+                className="w-full p-3 rounded-xl hover:bg-sky-50 text-sky-900 flex items-center gap-3 font-semibold transition cursor-pointer text-left"
               >
-                <ShieldCheck className="w-5 h-5 text-[#00897b]" />
-                <span>Admin Console</span>
-              </button>
+                <RealTelegramIcon className="w-5 h-5 text-[#229ED9]" />
+                <span>Join Us on Telegram</span>
+              </a>
 
               <div className="pt-4 border-t my-4 text-xs text-slate-500 space-y-2">
                 <div className="font-bold text-slate-700">Platform Credentials:</div>

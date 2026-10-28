@@ -24,6 +24,7 @@ import {
   getQuestionsByTopic,
 } from '../data/allQuestions';
 import { StorageService } from '../utils/storage';
+import { AiAssistantModal } from './AiAssistantModal';
 
 interface SubjectExamPageProps {
   subjectId: SubjectId;
@@ -40,19 +41,168 @@ interface SubjectExamPageProps {
   }) => void;
 }
 
+export interface ExamCategoryDef {
+  categoryNumber: number;
+  title: string;
+}
+
+export const ENGLISH_CATEGORIES: ExamCategoryDef[] = [
+  { categoryNumber: 1, title: 'Grammar' },
+  { categoryNumber: 2, title: 'Reading Passage I' },
+  { categoryNumber: 3, title: 'Reading Passage II' },
+  { categoryNumber: 4, title: 'Sentence Comprehension' },
+  { categoryNumber: 5, title: 'Vocabulary - Substitution' },
+  { categoryNumber: 6, title: 'Vocabulary - Analogy' },
+  { categoryNumber: 7, title: 'Vocabulary - Completion' },
+  { categoryNumber: 8, title: 'Communicative Activities' },
+  { categoryNumber: 9, title: 'Word Spelling' },
+  { categoryNumber: 10, title: 'Punctuation and Capitalization' },
+  { categoryNumber: 11, title: 'Jumbled Words' },
+  { categoryNumber: 12, title: 'Paragraph Coherence' },
+  { categoryNumber: 13, title: 'Letter Writing' },
+  { categoryNumber: 14, title: 'Types of Paragraph Writing' },
+];
+
+export const APTITUDE_CATEGORIES: ExamCategoryDef[] = [
+  { categoryNumber: 1, title: 'Classification Items' },
+  { categoryNumber: 2, title: 'Reading Comprehension' },
+  { categoryNumber: 3, title: 'Analytical and Logical Reasoning' },
+  { categoryNumber: 4, title: 'Word Substitution' },
+  { categoryNumber: 5, title: 'Synonyms' },
+  { categoryNumber: 6, title: 'Reading Comprehension II' },
+  { categoryNumber: 7, title: 'Sentence Correction' },
+  { categoryNumber: 8, title: 'Analogy' },
+  { categoryNumber: 9, title: 'Antonyms' },
+  { categoryNumber: 10, title: 'Quantitative Reasoning' },
+  { categoryNumber: 11, title: 'Data Interpretation' },
+];
+
+// Helper to filter questions by category
+function filterQuestionsByCategory(
+  subjectId: SubjectId,
+  categoryTitle: string,
+  yearTab: string
+): Question[] {
+  const normCat = categoryTitle.toLowerCase().trim();
+
+  return ALL_QUESTIONS.filter((q) => {
+    if (q.subject !== subjectId) return false;
+
+    // Filter by year if specific year is chosen
+    if (yearTab !== 'All') {
+      const targetYear = yearTab.replace(/\s*(Na|So)$/i, '').trim();
+      if (q.year !== targetYear) return false;
+    }
+
+    const qUnit = (q.unit || '').toLowerCase();
+    const qPassage = (q.passageTitle || '').toLowerCase();
+    const qTopic = (q.topic || '').toLowerCase();
+
+    if (subjectId === 'english') {
+      if (normCat === 'grammar') {
+        return qUnit.includes('grammar') || qUnit.includes('structure') || qTopic.includes('grammar');
+      }
+      if (normCat === 'reading passage i') {
+        return qUnit === 'reading passage i' || qPassage.includes('passage i') || qTopic.includes('passage i');
+      }
+      if (normCat === 'reading passage ii') {
+        return qUnit === 'reading passage ii' || qPassage.includes('passage ii') || qTopic.includes('passage ii');
+      }
+      if (normCat === 'sentence comprehension') {
+        return qUnit.includes('sentence comprehension') || qTopic.includes('sentence comprehension');
+      }
+      if (normCat === 'vocabulary - substitution') {
+        return qUnit.includes('substitution') || qTopic.includes('substitution');
+      }
+      if (normCat === 'vocabulary - analogy') {
+        return qUnit.includes('analogy') || qTopic.includes('analogy');
+      }
+      if (normCat === 'vocabulary - completion') {
+        return qUnit.includes('completion') || (qUnit.includes('vocabulary') && !qUnit.includes('substitution') && !qUnit.includes('analogy'));
+      }
+      if (normCat === 'communicative activities') {
+        return qUnit.includes('communicative') || qTopic.includes('communicative') || qTopic.includes('conversation');
+      }
+      if (normCat === 'word spelling') {
+        return qUnit.includes('spelling') || qTopic.includes('spelling');
+      }
+      if (normCat === 'punctuation and capitalization') {
+        return qUnit.includes('punctuation') || qTopic.includes('punctuation');
+      }
+      if (normCat === 'jumbled words') {
+        return qUnit.includes('jumbled') || qTopic.includes('jumbled');
+      }
+      if (normCat === 'paragraph coherence') {
+        return qUnit.includes('coherence') || qTopic.includes('coherence');
+      }
+      if (normCat === 'letter writing') {
+        return qUnit.includes('letter') || qTopic.includes('letter');
+      }
+      if (normCat === 'types of paragraph writing') {
+        return qUnit.includes('paragraph writing') || qTopic.includes('paragraph writing');
+      }
+    }
+
+    if (subjectId === 'aptitude') {
+      if (normCat === 'classification items') {
+        return qUnit.includes('classification') || qTopic.includes('classification') || qTopic.includes('odd one out');
+      }
+      if (normCat === 'reading comprehension') {
+        return qUnit === 'reading comprehension' || (qPassage.includes('passage i') && !qPassage.includes('passage ii'));
+      }
+      if (normCat === 'analytical and logical reasoning') {
+        return qUnit.includes('analytical') || qUnit.includes('logical') || qUnit.includes('syllogism');
+      }
+      if (normCat === 'word substitution') {
+        return qUnit.includes('substitution');
+      }
+      if (normCat === 'synonyms') {
+        return qUnit.includes('synonyms');
+      }
+      if (normCat === 'reading comprehension ii') {
+        return qUnit.includes('reading comprehension ii') || qPassage.includes('passage ii');
+      }
+      if (normCat === 'sentence correction') {
+        return qUnit.includes('sentence correction');
+      }
+      if (normCat === 'analogy') {
+        return qUnit.includes('analogy') || qTopic.includes('analogy');
+      }
+      if (normCat === 'antonyms') {
+        return qUnit.includes('antonyms');
+      }
+      if (normCat === 'quantitative reasoning') {
+        return qUnit.includes('quantitative') || qUnit.includes('sequence') || qUnit.includes('spatial');
+      }
+      if (normCat === 'data interpretation') {
+        return qUnit.includes('data interpretation') || qUnit.includes('data sufficiency');
+      }
+    }
+
+    return qUnit === normCat;
+  });
+}
+
 export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
   subjectId,
   onBack,
   onStartExam,
 }) => {
   const config = SUBJECT_CONFIGS[subjectId];
-  // Tabs: 'All' (Full examination list) or specific year '2017' | '2016' | '2015' | '2014/15'
+  const isSpecialCategorySubject = subjectId === 'english' || subjectId === 'aptitude';
+
+  // Tabs
+  const tabs = isSpecialCategorySubject
+    ? ['All', '2018 Na', '2017 Na', '2016 Na', '2015 Na', '2014/15 Na', '2014/15 So']
+    : ['All', '2018', '2017', '2016', '2015', '2014', '2013'];
+
   const [activeTab, setActiveTab] = useState<string>('All');
   const [showCategoryExplorer, setShowCategoryExplorer] = useState(false);
   const [selectedGrade, setSelectedGrade] = useState<number | null>(null);
   const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [selectedUnitGrade, setSelectedUnitGrade] = useState<'all' | 9 | 10 | 11 | 12>('all');
+  const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
 
   const getGradeCircleBg = (grade: number | string) => {
     const gNum = typeof grade === 'string' ? parseInt(grade, 10) : grade;
@@ -82,7 +232,6 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
     durationSeconds: number;
   } | null>(null);
 
-  const tabs = ['All', '2018', '2017', '2016', '2015', '2014', '2013'];
   const [soonModalMessage, setSoonModalMessage] = useState<string | null>(null);
   const papers = getExamPapersForSubject(subjectId);
   const units = CURRICULUM_UNITS[subjectId] || [];
@@ -90,10 +239,11 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
 
   const handleTabClick = (tab: string) => {
     if (subjectId === 'maths_soc') {
-      setSoonModalMessage("Rebira will add this questions soon.");
+      setSoonModalMessage('Rebira will add this questions soon.');
       return;
     }
-    if (tab !== 'All' && tab !== '2018' && tab !== '2017' && tab !== '2016') {
+    const cleanYear = tab.replace(/\s*(Na|So)$/i, '').trim();
+    if (tab !== 'All' && cleanYear !== '2018' && cleanYear !== '2017' && cleanYear !== '2016') {
       setSoonModalMessage("Rebira will add this year's questions soon.");
       return;
     }
@@ -116,7 +266,7 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen pb-24 bg-slate-100/70 text-slate-900">
+    <div className="min-h-screen pb-24 bg-slate-100/70 text-slate-900 relative">
       {/* Top Application Bar with Subject Title */}
       <header className="sticky top-0 z-30 bg-[#00897b] text-white shadow-sm">
         <div className="max-w-md mx-auto px-4 h-14 flex items-center justify-between">
@@ -133,16 +283,18 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
             </h1>
           </div>
 
-          <button
-            onClick={() => setShowCategoryExplorer(!showCategoryExplorer)}
-            className="text-xs font-semibold bg-teal-800/80 hover:bg-teal-700 px-3 py-1.5 rounded-lg border border-teal-600/40 flex items-center gap-1.5 cursor-pointer"
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>{showCategoryExplorer ? 'View By Year' : 'Categories Tree'}</span>
-          </button>
+          {!isSpecialCategorySubject && (
+            <button
+              onClick={() => setShowCategoryExplorer(!showCategoryExplorer)}
+              className="text-xs font-semibold bg-teal-800/80 hover:bg-teal-700 px-3 py-1.5 rounded-lg border border-teal-600/40 flex items-center gap-1.5 cursor-pointer"
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>{showCategoryExplorer ? 'View By Year' : 'Categories Tree'}</span>
+            </button>
+          )}
         </div>
 
-        {/* Horizontal Navigation Tabs (matching Screenshot_20261019-071418_49aaae27.jpg) */}
+        {/* Horizontal Navigation Tabs */}
         {!showCategoryExplorer && (
           <div className="max-w-md mx-auto px-2 flex items-center justify-around border-t border-teal-600/40 overflow-x-auto scrollbar-none">
             {tabs.map((tab) => {
@@ -168,8 +320,84 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
 
       {/* Main Container */}
       <div className="max-w-md mx-auto px-4 pt-3">
-        {/* VIEW 1: CATEGORY HIERARCHY TREE EXPLORER (Subject -> Grade -> Unit -> Topic -> Questions) */}
-        {showCategoryExplorer ? (
+        {isSpecialCategorySubject ? (
+          /* =========================================================================
+             SPECIAL CATEGORY VIEW FOR ENGLISH & APTITUDE (Matching User Screenshots)
+             ========================================================================= */
+          <div className="space-y-3">
+            {(subjectId === 'english' ? ENGLISH_CATEGORIES : APTITUDE_CATEGORIES).map(
+              (cat) => {
+                const matchingQuestions = filterQuestionsByCategory(
+                  subjectId,
+                  cat.title,
+                  activeTab
+                );
+                const qCount = matchingQuestions.length;
+                const stats = StorageService.getUnitStats(subjectId, cat.title);
+                const progressPct = stats?.bestScore || 0;
+                const durationSec = Math.max(120, qCount * 120);
+
+                return (
+                  <div
+                    key={cat.categoryNumber}
+                    onClick={() => {
+                      if (qCount === 0) {
+                        setSoonModalMessage(
+                          'No examination questions currently available for this category. Rebira will add them soon.'
+                        );
+                        return;
+                      }
+                      setModeModalTarget({
+                        unitTitle: cat.title,
+                        year:
+                          activeTab !== 'All'
+                            ? (activeTab.replace(/\s*(Na|So)$/i, '').trim() as ExamYear)
+                            : undefined,
+                        isUnitPractice: true,
+                        title: `${config.title} — Category ${cat.categoryNumber}: ${cat.title}`,
+                        questionCount: qCount,
+                        durationSeconds: durationSec,
+                      });
+                    }}
+                    className="bg-white rounded-xl p-3.5 shadow-2xs border border-slate-200/90 hover:shadow-md transition active:scale-[0.99] cursor-pointer flex items-center gap-3.5"
+                  >
+                    {/* Pink/Red Circular Badge with Category Number */}
+                    <div className="w-12 h-12 rounded-full bg-[#e91e63] text-white font-black text-lg flex items-center justify-center shrink-0 shadow-xs">
+                      {cat.categoryNumber}
+                    </div>
+
+                    {/* Category Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between text-xs mb-0.5">
+                        <span className="font-bold text-slate-900 text-sm">
+                          Category {cat.categoryNumber}
+                        </span>
+                        <span className="text-slate-500 font-medium">
+                          {qCount} {qCount === 1 ? 'ques' : 'ques'}
+                        </span>
+                      </div>
+
+                      <h4 className="font-medium text-slate-800 text-xs sm:text-sm truncate">
+                        {cat.title}
+                      </h4>
+
+                      {/* Participation Level Bar */}
+                      <div className="mt-2 w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            progressPct > 0 ? 'bg-[#43a047]' : 'bg-[#e53935] w-2'
+                          }`}
+                          style={{ width: progressPct > 0 ? `${progressPct}%` : '8px' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+            )}
+          </div>
+        ) : showCategoryExplorer ? (
+          /* VIEW 1: CATEGORY HIERARCHY TREE EXPLORER FOR SCIENCE SUBJECTS */
           <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
             <div className="flex items-center justify-between mb-4 pb-2 border-b">
               <div>
@@ -199,77 +427,54 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
                       setSelectedUnit(null);
                       setSelectedTopic(null);
                     }}
-                    className={`py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 border cursor-pointer ${
+                    className={`p-2.5 rounded-xl border text-left text-xs font-bold transition flex items-center justify-between cursor-pointer ${
                       selectedGrade === node.grade
-                        ? 'bg-[#00897b] text-white border-[#00897b] shadow-xs'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        ? 'bg-teal-50 border-teal-600 text-teal-900 shadow-xs'
+                        : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
                     }`}
                   >
                     <span>Grade {node.grade}</span>
+                    <span className="text-[10px] text-slate-400 font-normal">
+                      {node.units.length} units
+                    </span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Units Selector */}
+            {/* Unit Selector */}
             {selectedGrade && (
               <div className="mb-4">
                 <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase">
-                  2. Select Unit in Grade {selectedGrade}
+                  2. Select Curriculum Unit
                 </label>
                 <div className="space-y-1.5 max-h-56 overflow-y-auto">
                   {hierarchy
                     .find((n) => n.grade === selectedGrade)
-                    ?.units.map((u) => (
-                      <button
-                        key={u.unitTitle}
-                        onClick={() => {
-                          setSelectedUnit(u.unitTitle);
-                          setSelectedTopic(null);
-                        }}
-                        className={`w-full p-2.5 rounded-xl text-left text-xs font-semibold transition border flex items-center justify-between cursor-pointer ${
-                          selectedUnit === u.unitTitle
-                            ? 'bg-teal-50 border-teal-500 text-teal-950 font-bold'
-                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
-                        }`}
-                      >
-                        <span>Unit {u.unitNumber}: {u.unitTitle}</span>
-                        <ChevronRight className="w-4 h-4 text-slate-400" />
-                      </button>
-                    ))}
-                </div>
-              </div>
-            )}
-
-            {/* Topics Selector */}
-            {selectedUnit && (
-              <div className="mb-4">
-                <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase">
-                  3. Select Topic
-                </label>
-                <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                  {hierarchy
-                    .find((n) => n.grade === selectedGrade)
-                    ?.units.find((u) => u.unitTitle === selectedUnit)
-                    ?.topics.map((top) => {
-                      const topQuestions = getQuestionsByTopic(subjectId, top);
+                    ?.units.map((u) => {
+                      const uQuestions = getQuestionsForUnit(subjectId, u.unitTitle);
                       return (
                         <button
-                          key={top}
-                          onClick={() => setSelectedTopic(top)}
+                          key={u.unitTitle}
+                          onClick={() => {
+                            setSelectedUnit(u.unitTitle);
+                            setSelectedTopic(null);
+                          }}
                           className={`w-full p-2.5 rounded-xl text-left text-xs transition border flex items-center justify-between cursor-pointer ${
-                            selectedTopic === top
-                              ? 'bg-purple-50 border-purple-500 text-purple-950 font-bold'
+                            selectedUnit === u.unitTitle
+                              ? 'bg-blue-50 border-blue-600 text-blue-950 font-bold'
                               : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
                           }`}
                         >
-                          <div>
-                            <span>{top}</span>
-                            <div className="text-[10px] text-slate-400">
-                              {topQuestions.length > 0 ? `${topQuestions.length} verified questions` : '0 questions'}
-                            </div>
+                          <div className="truncate mr-2">
+                            <span className="font-semibold text-slate-500 mr-1.5">
+                              U{u.unitNumber}.
+                            </span>
+                            <span>{u.unitTitle}</span>
                           </div>
-                          <ChevronRight className="w-4 h-4 text-slate-400" />
+                          <span className="text-[10px] text-slate-400 shrink-0">
+                            {uQuestions.length > 0 ? `${uQuestions.length} ques` : '0 ques'}
+                          </span>
                         </button>
                       );
                     })}
@@ -277,7 +482,7 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
               </div>
             )}
 
-            {/* Practice Button for Selected Category */}
+            {/* Practice Button for Selected Unit */}
             {selectedUnit && (
               <div className="pt-2 border-t">
                 {(() => {
@@ -285,17 +490,15 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
                     ? getQuestionsByTopic(subjectId, selectedTopic)
                     : getQuestionsForUnit(subjectId, selectedUnit);
                   const count = qList.length;
-                  const durationSec = Math.max(120, count * 120); // 2 minutes per question
+                  const durationSec = Math.max(120, count * 120);
 
                   return (
                     <button
                       onClick={() => {
-                        if (subjectId === 'maths_soc') {
-                          setSoonModalMessage("Rebira will add this questions soon.");
-                          return;
-                        }
                         if (count === 0) {
-                          setSoonModalMessage("No examination questions currently available for this topic. Rebira will add them soon.");
+                          setSoonModalMessage(
+                            'No examination questions currently available for this topic. Rebira will add them soon.'
+                          );
                           return;
                         }
                         setModeModalTarget({
@@ -311,12 +514,15 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
                         });
                       }}
                       className={`w-full py-3 rounded-xl font-bold text-xs sm:text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer ${
-                        count === 0 ? 'bg-slate-400 text-white hover:bg-slate-500' : 'bg-[#00897b] hover:bg-[#00796b] text-white'
+                        count === 0
+                          ? 'bg-slate-400 text-white hover:bg-slate-500'
+                          : 'bg-[#00897b] hover:bg-[#00796b] text-white'
                       }`}
                     >
                       <Play className="w-4 h-4 fill-white" />
                       <span>
-                        PRACTICE {selectedTopic || selectedUnit} ({count} questions{count > 0 ? ` • ${formatDurationHHMMSS(durationSec)}` : ''})
+                        PRACTICE {selectedTopic || selectedUnit} ({count} questions
+                        {count > 0 ? ` • ${formatDurationHHMMSS(durationSec)}` : ''})
                       </span>
                     </button>
                   );
@@ -325,7 +531,7 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
             )}
           </div>
         ) : activeTab === 'All' ? (
-          /* VIEW 2: FULL EXAMINATION BY YEARS (Matching Screenshot_20261019-071433_70cb2fc8.jpg) */
+          /* VIEW 2: FULL EXAMINATION BY YEARS FOR SCIENCE SUBJECTS */
           <div className="space-y-4">
             {papers.map((paper) => {
               const stats = StorageService.getPaperStats(subjectId, paper.year);
@@ -336,10 +542,6 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
                 <div
                   key={paper.id}
                   onClick={() => {
-                    if (subjectId === 'maths_soc') {
-                      setSoonModalMessage("Rebira will add this questions soon.");
-                      return;
-                    }
                     if (paper.year !== '2018' && paper.year !== '2017' && paper.year !== '2016') {
                       setSoonModalMessage("Rebira will add this year's questions soon.");
                       return;
@@ -354,14 +556,11 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
                   }}
                   className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden cursor-pointer hover:shadow-md transition active:scale-[0.99]"
                 >
-                  {/* Top teal header band */}
                   <div className="bg-[#00897b] px-4 py-2 text-white font-bold text-sm tracking-wide">
                     {paper.year} - Natural
                   </div>
 
-                  {/* Body with circular gauge and details */}
                   <div className="p-4 flex items-center justify-between">
-                    {/* Left: Info list */}
                     <div className="space-y-1.5 text-xs text-slate-600 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="w-28 text-slate-500 font-medium">Total Questions:</span>
@@ -385,7 +584,6 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
                       </div>
                     </div>
 
-                    {/* Right: Circular score gauge (as shown in Screenshot_20261019-071433_70cb2fc8.jpg) */}
                     <div className="relative w-20 h-20 flex items-center justify-center shrink-0 ml-2">
                       <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
                         <circle
@@ -418,17 +616,10 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
                 </div>
               );
             })}
-
-            {/* Bottom swipe hint banner */}
-            <div className="pt-2 pb-6 text-center text-xs text-slate-500 flex items-center justify-center gap-1.5">
-              <span>Swipe right or tap tabs above to access exams by unit</span>
-              <ArrowRight className="w-3.5 h-3.5 text-teal-600" />
-            </div>
           </div>
         ) : (
-          /* VIEW 3: PRACTICE BY UNIT FOR SPECIFIC YEAR (Matching Screenshot_20261019-071418_49aaae27.jpg) */
+          /* VIEW 3: PRACTICE BY UNIT FOR SCIENCE SUBJECTS */
           <div className="space-y-3">
-            {/* Grade Filter Pills for Ethiopian New Curriculum Grades 9–12 */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
               <button
                 onClick={() => setSelectedUnitGrade('all')}
@@ -466,7 +657,6 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
               })}
             </div>
 
-            {/* List of Units */}
             {units
               .filter((u) => selectedUnitGrade === 'all' || u.grade === selectedUnitGrade)
               .map((u) => {
@@ -476,27 +666,23 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
                     q.unit.toLowerCase() === u.title.toLowerCase() &&
                     q.year === activeTab
                 );
-                // In All tab, show all questions for unit
                 const allUnitQuestions = ALL_QUESTIONS.filter(
                   (q) => q.subject === subjectId && q.unit.toLowerCase() === u.title.toLowerCase()
                 );
                 const qCount = activeTab === 'All' ? allUnitQuestions.length : yearQuestions.length;
                 const unitStats = StorageService.getUnitStats(subjectId, u.title);
                 const progressPct = unitStats?.bestScore || 0;
-                const durationSec = Math.max(120, qCount * 120); // 2 minutes per question
-
+                const durationSec = Math.max(120, qCount * 120);
                 const gradeCircleBg = getGradeCircleBg(u.grade);
 
                 return (
                   <div
                     key={u.id}
                     onClick={() => {
-                      if (subjectId === 'maths_soc') {
-                        setSoonModalMessage("Rebira will add this questions soon.");
-                        return;
-                      }
                       if (qCount === 0) {
-                        setSoonModalMessage("No examination questions currently available for this unit. Rebira will add them soon.");
+                        setSoonModalMessage(
+                          'No examination questions currently available for this unit. Rebira will add them soon.'
+                        );
                         return;
                       }
                       setModeModalTarget({
@@ -511,14 +697,12 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
                     }}
                     className="bg-white rounded-xl p-3.5 shadow-2xs border border-slate-200/90 hover:shadow-md transition active:scale-[0.99] cursor-pointer flex items-center gap-3.5"
                   >
-                    {/* Circular Grade Badge: Blue for 12, Pink for 11, Orange for 10, Teal for 9 */}
                     <div
                       className={`w-12 h-12 rounded-full ${gradeCircleBg} text-white font-extrabold text-lg flex items-center justify-center shrink-0 shadow-xs`}
                     >
                       {u.grade}
                     </div>
 
-                    {/* Unit details and Participation level progress line */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between text-xs mb-0.5">
                         <span className="font-bold text-slate-900">
@@ -533,7 +717,6 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
                         {u.title}
                       </h4>
 
-                      {/* Participation Level Bar (Green/Red progress line as in screenshot) */}
                       <div className="mt-2 w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-500 ${
@@ -549,6 +732,23 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
           </div>
         )}
       </div>
+
+      {/* Floating 3RM AI Assistant Trigger Button */}
+      <button
+        onClick={() => setIsAiAssistantOpen(true)}
+        title="Ask 3RM AI Assistant"
+        aria-label="3RM AI Assistant"
+        className="fixed right-3 sm:right-5 bottom-6 z-40 w-13 h-13 rounded-full bg-[#00897b] hover:bg-[#00796b] text-white shadow-xl flex items-center justify-center border-2 border-white/90 active:scale-95 transition-all cursor-pointer group hover:ring-4 hover:ring-teal-200"
+      >
+        <Sparkles className="w-6 h-6 text-amber-300 group-hover:rotate-12 transition-transform" />
+      </button>
+
+      {/* 3RM AI Assistant Modal */}
+      <AiAssistantModal
+        isOpen={isAiAssistantOpen}
+        onClose={() => setIsAiAssistantOpen(false)}
+        subjectTitle={config.title}
+      />
 
       {/* Answer Feedback Mode Selection Dialog */}
       {modeModalTarget && (
@@ -570,7 +770,6 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
             </div>
 
             <div className="space-y-3 mb-6">
-              {/* Option 1: Right away */}
               <button
                 onClick={() => handleStartExamConfirmed('right_away')}
                 className="w-full p-3.5 rounded-xl border border-teal-200 hover:border-teal-500 bg-teal-50/50 hover:bg-teal-50 text-left transition flex items-start gap-3 cursor-pointer group"
@@ -579,33 +778,36 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
                   <div className="w-1.5 h-1.5 rounded-full bg-transparent group-hover:bg-white" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-teal-950">Right away (Study Mode)</div>
-                  <div className="text-[11px] text-teal-800/80 leading-normal mt-0.5">
-                    Instant color feedback with checkmark and explanations immediately as you tap each answer.
-                  </div>
+                  <h4 className="font-bold text-xs text-teal-950">
+                    Right away
+                  </h4>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Show green/red answer indication and full explanation immediately after choosing.
+                  </p>
                 </div>
               </button>
 
-              {/* Option 2: After finishing */}
               <button
                 onClick={() => handleStartExamConfirmed('after_finishing')}
-                className="w-full p-3.5 rounded-xl border border-slate-200 hover:border-slate-400 bg-slate-50 hover:bg-white text-left transition flex items-start gap-3 cursor-pointer group"
+                className="w-full p-3.5 rounded-xl border border-slate-200 hover:border-teal-500 hover:bg-teal-50/40 text-left transition flex items-start gap-3 cursor-pointer group"
               >
-                <div className="w-4 h-4 rounded-full border-2 border-slate-400 mt-0.5 group-hover:bg-slate-800 flex items-center justify-center transition">
-                  <div className="w-1.5 h-1.5 rounded-full bg-transparent group-hover:bg-white" />
+                <div className="w-4 h-4 rounded-full border-2 border-slate-400 group-hover:border-teal-600 mt-0.5 flex items-center justify-center transition">
+                  <div className="w-1.5 h-1.5 rounded-full bg-transparent group-hover:bg-teal-600" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-slate-900">After finishing (Exam Simulation)</div>
-                  <div className="text-[11px] text-slate-600 leading-normal mt-0.5">
-                    Realistic exam condition. Answers and explanations are revealed after submission.
-                  </div>
+                  <h4 className="font-bold text-xs text-slate-900 group-hover:text-teal-950">
+                    After finishing
+                  </h4>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Simulate genuine exam conditions with score calculation and answer review at the end.
+                  </p>
                 </div>
               </button>
             </div>
 
             <button
               onClick={() => setModeModalTarget(null)}
-              className="w-full py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 cursor-pointer"
+              className="w-full py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
             >
               Cancel
             </button>
@@ -613,24 +815,24 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
         </div>
       )}
 
-      {/* Notice Dialog from Rebira Sisay Giti for other years */}
+      {/* Notice Modal */}
       {soonModalMessage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-sm rounded-3xl bg-white shadow-2xl border border-slate-100 p-6 text-center animate-in fade-in zoom-in-95">
-            <div className="w-16 h-16 mx-auto mb-3.5 rounded-2xl bg-teal-50 text-[#00897b] flex items-center justify-center font-black text-2xl border border-teal-200/80 shadow-xs">
-              3RM
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-sm rounded-2xl bg-white shadow-2xl p-6 text-center border border-slate-100 animate-fade-in">
+            <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-3">
+              <Clock className="w-6 h-6" />
             </div>
-            <h3 className="font-bold text-base text-slate-900 mb-2">
-              Notice from Rebira Sisay Giti (3RM)
+            <h3 className="font-bold text-base text-slate-900 mb-1.5">
+              Notice
             </h3>
-            <p className="text-xs sm:text-sm text-slate-600 mb-5 leading-relaxed">
+            <p className="text-xs text-slate-600 mb-5 leading-relaxed">
               {soonModalMessage}
             </p>
             <button
               onClick={() => setSoonModalMessage(null)}
-              className="w-full py-3 rounded-xl bg-[#00897b] hover:bg-[#00796b] text-white font-bold text-xs sm:text-sm shadow-md transition active:scale-95 cursor-pointer"
+              className="w-full py-2.5 rounded-xl text-xs font-bold bg-[#00897b] hover:bg-[#00796b] text-white shadow-sm transition cursor-pointer"
             >
-              GOT IT
+              Understood
             </button>
           </div>
         </div>

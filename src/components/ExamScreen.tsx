@@ -2,19 +2,15 @@ import React, { useEffect, useState, useRef } from 'react';
 import {
   Clock,
   AlertTriangle,
-  CheckCircle2,
-  XCircle,
-  HelpCircle,
-  ChevronDown,
-  ChevronUp,
   LayoutGrid,
   Send,
   ArrowLeft,
   X,
   BookOpen,
   Check,
-  MoreVertical,
-  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
 } from 'lucide-react';
 import {
   ActiveExamSession,
@@ -28,6 +24,8 @@ import {
 import { SUBJECT_CONFIGS, formatDurationHHMMSS } from '../data/subjectConfig';
 import { StorageService } from '../utils/storage';
 import { DiagramViewer } from './DiagramViewer';
+import { cleanExamText } from '../utils/textCleaner';
+import { AiAssistantModal } from './AiAssistantModal';
 
 interface ExamScreenProps {
   subjectId: SubjectId;
@@ -60,70 +58,24 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({
 }) => {
   const config = SUBJECT_CONFIGS[subjectId];
   const examId = `${subjectId}-${year || 'unit'}-${Date.now()}`;
-  // For unit practice: 2 minutes per question (questions.length * 120 seconds)
   const totalDuration = timeSeconds || (isUnitPractice ? questions.length * 120 : config.durationSeconds);
 
-  // Initialize or restore active session
-  const [userAnswers, setUserAnswers] = useState<Record<string, number>>(() => {
-    const savedSession = StorageService.getActiveSession();
-    if (
-      savedSession &&
-      savedSession.subject === subjectId &&
-      savedSession.year === year &&
-      savedSession.isUnitPractice === isUnitPractice
-    ) {
-      return savedSession.userAnswers || {};
-    }
-    return {};
-  });
-
-  const [deadlineTimestamp, setDeadlineTimestamp] = useState<number>(() => {
-    const savedSession = StorageService.getActiveSession();
-    if (
-      savedSession &&
-      savedSession.subject === subjectId &&
-      savedSession.year === year &&
-      savedSession.isUnitPractice === isUnitPractice &&
-      savedSession.deadlineTimestamp > Date.now()
-    ) {
-      return savedSession.deadlineTimestamp;
-    }
-    return Date.now() + totalDuration * 1000;
-  });
-
-  const [remainingSeconds, setRemainingSeconds] = useState<number>(() => {
-    return Math.max(0, Math.floor((deadlineTimestamp - Date.now()) / 1000));
-  });
+  // Fresh examination session: starts fresh without resuming stale quiz state
+  const [userAnswers, setUserAnswers] = useState<Record<string, number>>({});
+  const [deadlineTimestamp, setDeadlineTimestamp] = useState<number>(() => Date.now() + totalDuration * 1000);
+  const [remainingSeconds, setRemainingSeconds] = useState<number>(totalDuration);
 
   const [expandedExplanations, setExpandedExplanations] = useState<Record<string, boolean>>({});
   const [showPalette, setShowPalette] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
+  const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
+
   const questionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Sync session into localStorage so accidental refresh or quit preserves progress
-  useEffect(() => {
-    const session: ActiveExamSession = {
-      examId,
-      subject: subjectId,
-      year,
-      unitTitle,
-      grade,
-      topicTitle,
-      isUnitPractice,
-      feedbackMode,
-      deadlineTimestamp,
-      totalDurationSeconds: totalDuration,
-      timeRemainingSeconds: remainingSeconds,
-      questionIds: questions.map((q) => q.id),
-      userAnswers,
-      startedAt: new Date().toISOString(),
-    };
-    StorageService.saveActiveSession(session);
-  }, [userAnswers, deadlineTimestamp, remainingSeconds]);
-
-  // Master countdown timer
+  // Countdown timer
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
@@ -146,7 +98,6 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({
   };
 
   const handleSelectOption = (questionId: string, optionIndex: number) => {
-    // In Right Away mode, lock after choosing
     if (feedbackMode === 'right_away' && userAnswers[questionId] !== undefined) {
       return;
     }
@@ -156,9 +107,7 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({
       [questionId]: optionIndex,
     };
     setUserAnswers(updated);
-    StorageService.updateSessionAnswers(updated);
 
-    // In Right Away mode, automatically expand explanation
     if (feedbackMode === 'right_away') {
       setExpandedExplanations((prev) => ({ ...prev, [questionId]: true }));
     }
@@ -171,26 +120,10 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({
     }));
   };
 
-  // Quit Exam confirmation handler: saves answers and time, returns to dashboard without submitting
+  // Quit Exam confirmation handler: clears active session so student starts fresh next time
   const handleConfirmQuit = () => {
-    // Save state
-    const session: ActiveExamSession = {
-      examId,
-      subject: subjectId,
-      year,
-      unitTitle,
-      grade,
-      topicTitle,
-      isUnitPractice,
-      feedbackMode,
-      deadlineTimestamp,
-      totalDurationSeconds: totalDuration,
-      timeRemainingSeconds: remainingSeconds,
-      questionIds: questions.map((q) => q.id),
-      userAnswers,
-      startedAt: new Date().toISOString(),
-    };
-    StorageService.saveActiveSession(session);
+    StorageService.clearActiveSession();
+    setUserAnswers({});
     setShowQuitConfirm(false);
     onExitExam();
   };
@@ -239,64 +172,60 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({
     onFinishExam(attempt);
   };
 
-  const scrollToQuestion = (questionId: string) => {
-    const el = questionRefs.current[questionId];
+  const answeredCount = Object.keys(userAnswers).length;
+  const progressPercent = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0;
+  const isOneMinWarning = remainingSeconds <= 60 && remainingSeconds > 0;
+
+  const scrollToQuestion = (qId: string) => {
+    const el = questionRefs.current[qId];
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setShowPalette(false);
     }
   };
 
-  const answeredCount = Object.keys(userAnswers).length;
-  const progressPercent = Math.round((answeredCount / questions.length) * 100);
-  const isFiveMinWarning = remainingSeconds <= 300 && remainingSeconds > 60;
-  const isOneMinWarning = remainingSeconds <= 60 && remainingSeconds > 0;
-
-  // Header Title formatted as in Screenshot: "G12 U4 : 5 ques." or full paper
-  const headerTitle = isUnitPractice && unitTitle
-    ? `${grade ? grade.replace('Grade ', 'G') : 'G12'} : ${questions.length} ques.`
-    : `${config.shortName} ${year || '2017'} : ${questions.length} ques.`;
-
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 pb-20">
-      {/* Sticky Examination Top App Bar (matching Screenshot) */}
+    <div className="min-h-screen pb-24 bg-slate-100 text-slate-900 relative">
+      {/* Sticky Exam Top Bar */}
       <header className="sticky top-0 z-30 bg-[#00897b] text-white shadow-md">
-        <div className="max-w-md mx-auto px-4 h-14 flex items-center justify-between">
-          {/* Top-Left Visible Back / Quit Exam Button */}
-          <div className="flex items-center gap-2.5">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between">
+          {/* Left: Back/Exit & Title */}
+          <div className="flex items-center gap-2.5 min-w-0">
             <button
               onClick={() => setShowQuitConfirm(true)}
-              className="p-1 rounded-lg hover:bg-white/15 transition active:scale-95 cursor-pointer flex items-center gap-1 text-white"
+              className="p-1.5 rounded-lg hover:bg-white/15 text-white transition active:scale-95 cursor-pointer shrink-0"
+              aria-label="Exit exam"
               title="Quit Exam"
-              aria-label="Quit Exam"
             >
-              <ArrowLeft className="w-6 h-6" />
+              <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-
-            <span className="font-bold text-sm sm:text-base tracking-wide truncate max-w-[170px]">
-              {headerTitle}
-            </span>
+            <div className="min-w-0 truncate">
+              <h2 className="font-bold text-xs sm:text-sm capitalize leading-tight truncate">
+                {unitTitle ? unitTitle : `${config.shortName} ${year || ''}`}
+              </h2>
+              <span className="text-[10px] text-teal-100 font-medium">
+                {answeredCount}/{questions.length} answered
+              </span>
+            </div>
           </div>
 
-          {/* Right: Timer & Finish & Palette */}
-          <div className="flex items-center gap-2">
-            {/* Countdown Timer */}
+          {/* Right: Digital Countdown Timer, Palette, and Finish Button */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* Timer Badge */}
             <div
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-mono text-xs font-bold ${
-                isOneMinWarning
-                  ? 'bg-rose-600 text-white animate-pulse'
-                  : isFiveMinWarning
-                  ? 'bg-amber-400 text-slate-950'
-                  : 'bg-teal-950/60 text-teal-100 border border-teal-600/40'
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs sm:text-sm font-black tracking-widest ${
+                remainingSeconds <= 300
+                  ? 'bg-rose-500 text-white animate-pulse'
+                  : 'bg-teal-900/80 text-amber-300 border border-teal-600/50'
               }`}
             >
               <Clock className="w-3.5 h-3.5" />
               <span>{formatDurationHHMMSS(remainingSeconds)}</span>
             </div>
 
-            {/* Jump Palette button */}
+            {/* Question Palette Trigger */}
             <button
-              onClick={() => setShowPalette(!showPalette)}
+              onClick={() => setShowPalette(true)}
               title="Question Palette"
               className="p-1.5 rounded-lg hover:bg-white/15 text-white transition cursor-pointer"
             >
@@ -330,8 +259,8 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({
         </div>
       )}
 
-      {/* Main Questions Container (Vertically Scrollable, matching ethiomatric_1792390847_2dd03890.jpg) */}
-      <main className="max-w-md mx-auto px-3 pt-3 space-y-4">
+      {/* Main Questions Container (Responsive, No Overflow, No Topics Displayed) */}
+      <main className="max-w-2xl mx-auto px-3 sm:px-4 pt-4 space-y-4 w-full">
         {questions.map((q, idx) => {
           const selectedOption = userAnswers[q.id];
           const isAnswered = selectedOption !== undefined;
@@ -344,19 +273,16 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({
               ref={(el) => {
                 questionRefs.current[q.id] = el;
               }}
-              className="bg-white rounded-xl p-4 shadow-sm border border-slate-200/90 scroll-mt-20"
+              onFocus={() => setActiveQuestionIndex(idx)}
+              onClick={() => setActiveQuestionIndex(idx)}
+              className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-slate-200/90 scroll-mt-20 overflow-hidden break-words max-w-full w-full"
             >
-              {/* Question Header: Number on Left, "Improve" on Right (matching screenshot) */}
-              <div className="flex items-center justify-between border-b border-[#e91e63]/40 pb-2 mb-3">
+              {/* Question Header: Number on Left, "Improve" on Right */}
+              <div className="flex items-center justify-between border-b border-[#e91e63]/30 pb-2 mb-3">
                 <div className="flex items-center gap-2">
                   <span className="font-black text-xl sm:text-2xl text-slate-900 tracking-tight">
                     {idx + 1}
                   </span>
-                  {q.topic && (
-                    <span className="bg-teal-50 text-teal-800 text-[11px] px-2.5 py-0.5 rounded-full font-semibold border border-teal-200">
-                      {q.topic}
-                    </span>
-                  )}
                 </div>
                 <span className="text-xs text-slate-400 hover:text-slate-600 font-medium cursor-pointer">
                   Improve
@@ -365,20 +291,20 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({
 
               {/* Reading Passage Card if question belongs to a passage */}
               {q.passageText && (
-                <div className="mb-4 p-4 rounded-xl bg-amber-50/80 border border-amber-200/90 text-slate-800 shadow-2xs">
-                  <div className="flex items-center gap-2 font-bold text-amber-950 text-sm mb-2 border-b border-amber-200/60 pb-1.5">
-                    <BookOpen className="w-4 h-4 text-amber-700" />
-                    <span>{q.passageTitle || 'Reading Comprehension Passage'}</span>
+                <div className="mb-4 p-3.5 sm:p-4 rounded-xl bg-amber-50/90 border border-amber-200/90 text-slate-800 shadow-2xs overflow-hidden break-words max-w-full">
+                  <div className="flex items-center gap-2 font-bold text-amber-950 text-xs sm:text-sm mb-2 border-b border-amber-200/60 pb-1.5">
+                    <BookOpen className="w-4 h-4 text-amber-700 shrink-0" />
+                    <span className="break-words">{q.passageTitle || 'Reading Comprehension Passage'}</span>
                   </div>
-                  <div className="text-xs sm:text-sm leading-relaxed whitespace-pre-line text-slate-800 font-normal space-y-2 max-h-72 overflow-y-auto pr-1">
+                  <div className="text-xs sm:text-sm leading-relaxed whitespace-pre-line text-slate-800 font-normal space-y-2 max-h-72 overflow-y-auto pr-1 break-words [overflow-wrap:anywhere]">
                     {q.passageText}
                   </div>
                 </div>
               )}
 
-              {/* Question Text - Increased Font Size */}
-              <p className="text-slate-900 text-lg sm:text-xl font-bold leading-relaxed mb-4 whitespace-pre-line">
-                {q.question}
+              {/* Question Text - Responsive and Wrap-Protected */}
+              <p className="text-slate-900 text-base sm:text-lg font-bold leading-relaxed mb-4 whitespace-pre-wrap break-words [overflow-wrap:anywhere] max-w-full w-full">
+                {cleanExamText(q.question)}
               </p>
 
               {/* Diagram / Image if question has visual asset */}
@@ -390,45 +316,36 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({
                 />
               )}
 
-              {/* Options with Increased Font Size and EXACT Solidity matching screenshot */}
-              <div className="space-y-2.5 mb-2">
+              {/* Options with Word Wrap Protection */}
+              <div className="space-y-2.5 mb-2 w-full max-w-full">
                 {q.options.map((optionText, optIdx) => {
                   const isUserSelection = selectedOption === optIdx;
                   const isCorrectAnswer = optIdx === q.correctAnswer;
                   const optionLetter = String.fromCharCode(65 + optIdx);
 
-                  // Determine background and solidity
                   let containerClasses =
-                    'w-full py-3.5 px-4 rounded-xl text-left flex items-center justify-between transition-colors cursor-pointer border border-transparent';
+                    'w-full py-3 sm:py-3.5 px-3 sm:px-4 rounded-xl text-left flex items-start sm:items-center justify-between transition-colors cursor-pointer border overflow-hidden break-words max-w-full';
                   let radioCircleClasses =
-                    'w-6 h-6 rounded-full border-2 border-slate-400 mr-3 flex items-center justify-center shrink-0 font-black text-xs sm:text-sm';
+                    'w-6 h-6 rounded-full border-2 border-slate-400 mr-2.5 sm:mr-3 flex items-center justify-center shrink-0 font-black text-xs sm:text-sm mt-0.5 sm:mt-0';
 
                   if (isRightAway && isAnswered) {
                     if (isCorrectAnswer) {
-                      // Solid Green Bar (same solidity as image: #81c784)
-                      containerClasses =
-                        'w-full py-3.5 px-4 rounded-xl text-left flex items-center justify-between bg-[#81c784] text-slate-950 font-bold shadow-xs';
+                      containerClasses += ' bg-[#81c784] text-slate-950 font-bold shadow-xs border-[#66bb6a]';
                       radioCircleClasses =
-                        'w-6 h-6 rounded-full bg-[#388e3c] border-2 border-white text-white mr-3 flex items-center justify-center shrink-0 font-black text-xs sm:text-sm';
+                        'w-6 h-6 rounded-full bg-[#388e3c] border-2 border-white text-white mr-2.5 sm:mr-3 flex items-center justify-center shrink-0 font-black text-xs sm:text-sm mt-0.5 sm:mt-0';
                     } else if (isUserSelection) {
-                      // Solid Salmon-Red Bar (same solidity as image: #ef9a9a)
-                      containerClasses =
-                        'w-full py-3.5 px-4 rounded-xl text-left flex items-center justify-between bg-[#ef9a9a] text-slate-950 font-bold shadow-xs';
+                      containerClasses += ' bg-[#ef9a9a] text-slate-950 font-bold shadow-xs border-[#e57373]';
                       radioCircleClasses =
-                        'w-6 h-6 rounded-full bg-[#d32f2f] border-2 border-white text-white mr-3 flex items-center justify-center shrink-0 font-black text-xs sm:text-sm';
+                        'w-6 h-6 rounded-full bg-[#d32f2f] border-2 border-white text-white mr-2.5 sm:mr-3 flex items-center justify-center shrink-0 font-black text-xs sm:text-sm mt-0.5 sm:mt-0';
                     } else {
-                      containerClasses =
-                        'w-full py-3.5 px-4 rounded-xl text-left flex items-center justify-between bg-white text-slate-700 hover:bg-slate-50 border border-slate-200/80';
+                      containerClasses += ' bg-white text-slate-700 hover:bg-slate-50 border-slate-200/80';
                     }
                   } else if (isUserSelection) {
-                    // In After Finishing mode: clean selection highlight
-                    containerClasses =
-                      'w-full py-3.5 px-4 rounded-xl text-left flex items-center justify-between bg-teal-50 border-2 border-teal-600 text-teal-950 font-bold';
+                    containerClasses += ' bg-teal-50 border-2 border-teal-600 text-teal-950 font-bold';
                     radioCircleClasses =
-                      'w-6 h-6 rounded-full bg-[#00897b] border-2 border-white text-white mr-3 flex items-center justify-center shrink-0 font-black text-xs sm:text-sm';
+                      'w-6 h-6 rounded-full bg-[#00897b] border-2 border-white text-white mr-2.5 sm:mr-3 flex items-center justify-center shrink-0 font-black text-xs sm:text-sm mt-0.5 sm:mt-0';
                   } else {
-                    containerClasses =
-                      'w-full py-3.5 px-4 rounded-xl text-left flex items-center justify-between bg-white text-slate-900 hover:bg-slate-50 border border-slate-200/90';
+                    containerClasses += ' bg-white text-slate-900 hover:bg-slate-50 border-slate-200/90';
                   }
 
                   return (
@@ -439,18 +356,18 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({
                       onClick={() => handleSelectOption(q.id, optIdx)}
                       className={containerClasses}
                     >
-                      <div className="flex items-center min-w-0 flex-1 pr-2">
+                      <div className="flex items-start sm:items-center min-w-0 flex-1 pr-2">
                         <div className={radioCircleClasses}>
                           <span>{optionLetter}</span>
                         </div>
-                        <span className="leading-snug font-bold text-slate-950 text-base sm:text-lg">
-                          {optionText}
+                        <span className="leading-snug font-bold text-slate-950 text-sm sm:text-base break-words [overflow-wrap:anywhere] flex-1 min-w-0">
+                          {cleanExamText(optionText)}
                         </span>
                       </div>
 
-                      {/* Right-edge Icons matching ethiomatric_1792390847_2dd03890.jpg */}
+                      {/* Right-edge Icons */}
                       {isRightAway && isAnswered && (
-                        <div className="shrink-0 ml-2">
+                        <div className="shrink-0 ml-1.5 mt-0.5 sm:mt-0">
                           {isCorrectAnswer && (
                             <Check className="w-5 h-5 text-white stroke-[3]" />
                           )}
@@ -464,8 +381,8 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({
                 })}
               </div>
 
-              {/* Collapsible "▾ Explanation" Accordion (matching screenshot) */}
-              {(isRightAway && isAnswered) ? (
+              {/* Collapsible Explanation Accordion */}
+              {isRightAway && isAnswered && (
                 <div className="pt-2">
                   <button
                     onClick={() => toggleExplanation(q.id)}
@@ -480,17 +397,17 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({
                   </button>
 
                   {isExplanationExpanded && (
-                    <div className="mt-2.5 p-3 rounded-lg bg-teal-50/80 border border-teal-200 text-xs text-teal-950 leading-relaxed animate-fade-in">
+                    <div className="mt-2.5 p-3 rounded-lg bg-teal-50/80 border border-teal-200 text-xs text-teal-950 leading-relaxed animate-fade-in break-words [overflow-wrap:anywhere]">
                       <p className="font-semibold text-teal-900 mb-1">
                         Verified Explanation & Solution:
                       </p>
-                      <p className="text-slate-700 leading-relaxed">
-                        {q.explanation}
+                      <p className="text-slate-700 leading-relaxed whitespace-pre-line">
+                        {cleanExamText(q.explanation)}
                       </p>
                     </div>
                   )}
                 </div>
-              ) : null}
+              )}
             </div>
           );
         })}
@@ -506,6 +423,25 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({
           </button>
         </div>
       </main>
+
+      {/* Floating 3RM AI Assistant Trigger Button (appears even when student is taking exam) */}
+      <button
+        onClick={() => setIsAiAssistantOpen(true)}
+        title="Ask 3RM AI Assistant"
+        aria-label="3RM AI Assistant"
+        className="fixed right-3 sm:right-5 bottom-6 z-40 w-13 h-13 rounded-full bg-[#00897b] hover:bg-[#00796b] text-white shadow-xl flex items-center justify-center border-2 border-white/90 active:scale-95 transition-all cursor-pointer group hover:ring-4 hover:ring-teal-200"
+      >
+        <Sparkles className="w-6 h-6 text-amber-300 group-hover:rotate-12 transition-transform" />
+      </button>
+
+      {/* 3RM AI Assistant Modal */}
+      <AiAssistantModal
+        isOpen={isAiAssistantOpen}
+        onClose={() => setIsAiAssistantOpen(false)}
+        currentQuestion={questions[activeQuestionIndex || 0]}
+        currentQuestionNumber={(activeQuestionIndex || 0) + 1}
+        subjectTitle={config.title}
+      />
 
       {/* Question Palette Drawer */}
       {showPalette && (
@@ -545,7 +481,7 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({
         </div>
       )}
 
-      {/* Visible Quit Exam Confirmation Dialog (as explicitly requested by user) */}
+      {/* Visible Quit Exam Confirmation Dialog */}
       {showQuitConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/75 p-4 backdrop-blur-xs">
           <div className="w-full max-w-sm rounded-2xl bg-white shadow-2xl border border-slate-100 p-6">
@@ -553,7 +489,7 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({
               Are you sure you want to quit this exam?
             </h3>
             <p className="text-xs text-slate-600 mb-5 leading-relaxed">
-              Your selected answers ({answeredCount}/{questions.length}) and remaining time ({formatDurationHHMMSS(remainingSeconds)}) will be securely saved locally. You can resume this examination later without losing progress.
+              If you quit now, this session will end. When you return to take this exam again, it will start completely fresh as a new examination.
             </p>
 
             <div className="flex items-center gap-2.5">

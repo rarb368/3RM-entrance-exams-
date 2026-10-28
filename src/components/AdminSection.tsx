@@ -20,6 +20,8 @@ import {
   ChevronDown,
   ChevronRight,
   ShieldCheck,
+  Megaphone,
+  Send,
 } from 'lucide-react';
 import { AdminStudentSummary, Question, SubjectId } from '../types';
 import { SUBJECT_CONFIGS } from '../data/subjectConfig';
@@ -38,7 +40,15 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Admin tabs
-  const [activeTab, setActiveTab] = useState<'students' | 'questions'>('students');
+  const [activeTab, setActiveTab] = useState<'students' | 'questions' | 'broadcast'>('students');
+
+  // Broadcast state
+  const [broadcastTitle, setBroadcastTitle] = useState('');
+  const [broadcastText, setBroadcastText] = useState('');
+  const [broadcastRecipient, setBroadcastRecipient] = useState('all');
+  const [broadcastSuccessMessage, setBroadcastSuccessMessage] = useState<string | null>(null);
+  const [broadcastErrorMessage, setBroadcastErrorMessage] = useState<string | null>(null);
+  const [isSendingBroadcast, setIsSendingBroadcast] = useState(false);
 
   // Students state
   const [students, setStudents] = useState<AdminStudentSummary[]>([]);
@@ -178,6 +188,43 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
     document.body.removeChild(link);
   };
 
+  const handleSendBroadcast = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!broadcastText.trim()) return;
+
+    setIsSendingBroadcast(true);
+    setBroadcastSuccessMessage(null);
+    setBroadcastErrorMessage(null);
+
+    try {
+      const res = await fetch('/api/admin/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          title: broadcastTitle.trim() || 'Notice from Admin',
+          text: broadcastText.trim(),
+          recipient: broadcastRecipient,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setBroadcastSuccessMessage('Message sent successfully! It is now visible to students as a notification next to the Telegram icon.');
+        setBroadcastTitle('');
+        setBroadcastText('');
+        setTimeout(() => setBroadcastSuccessMessage(null), 5000);
+      } else {
+        setBroadcastErrorMessage(data.error || 'Failed to send message');
+      }
+    } catch {
+      setBroadcastErrorMessage('Network error while dispatching message.');
+    } finally {
+      setIsSendingBroadcast(false);
+    }
+  };
+
   // Filter and sort students
   const filteredStudents = students.filter((st) => {
     const q = searchQuery.toLowerCase();
@@ -299,28 +346,39 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
       </div>
 
       {/* Admin Tab Switcher */}
-      <div className="bg-white p-1 rounded-xl shadow-xs border border-slate-200 flex items-center gap-1 mb-4">
+      <div className="bg-white p-1 rounded-xl shadow-xs border border-slate-200 flex items-center gap-1 mb-4 overflow-x-auto">
         <button
           onClick={() => setActiveTab('students')}
-          className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-lg transition flex items-center justify-center gap-2 cursor-pointer ${
+          className={`flex-1 py-2 px-2 text-xs sm:text-sm font-bold rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
             activeTab === 'students'
               ? 'bg-[#00897b] text-white shadow-xs'
               : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
           <Users className="w-4 h-4" />
-          <span>Registered Students ({students.length})</span>
+          <span>Students ({students.length})</span>
         </button>
         <button
           onClick={() => setActiveTab('questions')}
-          className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-lg transition flex items-center justify-center gap-2 cursor-pointer ${
+          className={`flex-1 py-2 px-2 text-xs sm:text-sm font-bold rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
             activeTab === 'questions'
               ? 'bg-[#00897b] text-white shadow-xs'
               : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
           <Layers className="w-4 h-4" />
-          <span>Category & Question Bank</span>
+          <span>Questions</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('broadcast')}
+          className={`flex-1 py-2 px-2 text-xs sm:text-sm font-bold rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
+            activeTab === 'broadcast'
+              ? 'bg-[#00897b] text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <Megaphone className="w-4 h-4" />
+          <span>Send Message</span>
         </button>
       </div>
 
@@ -546,6 +604,94 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* TAB 3: SEND ANNOUNCEMENT / MESSAGE TO STUDENTS */}
+      {activeTab === 'broadcast' && (
+        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200">
+          <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
+            <div className="w-10 h-10 rounded-full bg-teal-50 text-[#00897b] flex items-center justify-center">
+              <Megaphone className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm sm:text-base text-slate-900">
+                Send Notification to Students
+              </h3>
+              <p className="text-xs text-slate-500">
+                Broadcast official updates or send a message to a specific registered candidate.
+              </p>
+            </div>
+          </div>
+
+          {broadcastSuccessMessage && (
+            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{broadcastSuccessMessage}</span>
+            </div>
+          )}
+
+          {broadcastErrorMessage && (
+            <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-center gap-2">
+              <XCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>{broadcastErrorMessage}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSendBroadcast} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Recipient
+              </label>
+              <select
+                value={broadcastRecipient}
+                onChange={(e) => setBroadcastRecipient(e.target.value)}
+                className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#00897b] bg-slate-50/50"
+              >
+                <option value="all">📢 All Registered Students (Broadcast)</option>
+                {students.map((st) => (
+                  <option key={st.email} value={st.email}>
+                    👤 {st.fullName} ({st.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Notice Title
+              </label>
+              <input
+                type="text"
+                value={broadcastTitle}
+                onChange={(e) => setBroadcastTitle(e.target.value)}
+                placeholder="e.g. 2017 & 2016 Aptitude Exams Digitized"
+                className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#00897b] bg-slate-50/50"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Message Body <span className="text-rose-500">*</span>
+              </label>
+              <textarea
+                rows={4}
+                value={broadcastText}
+                onChange={(e) => setBroadcastText(e.target.value)}
+                placeholder="Type your official announcement here for AIBSBSS students..."
+                className="w-full rounded-xl border border-slate-300 p-3.5 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#00897b] bg-slate-50/50 resize-y"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={!broadcastText.trim() || isSendingBroadcast}
+              className="w-full py-3 rounded-xl bg-[#00897b] hover:bg-[#00796b] text-white font-bold text-xs sm:text-sm shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Send className="w-4 h-4" />
+              <span>{isSendingBroadcast ? 'Sending Notice...' : 'Send Message to Students'}</span>
+            </button>
+          </form>
         </div>
       )}
     </div>

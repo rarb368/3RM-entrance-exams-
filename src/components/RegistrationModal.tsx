@@ -11,19 +11,24 @@ interface RegistrationModalProps {
 
 export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, onRegistered }) => {
   const [fullName, setFullName] = useState('');
+  const [schoolName, setSchoolName] = useState('Ambo Ifa Boru Special Boarding Secondary School (AIBSBSS)');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
   const [grade, setGrade] = useState('12');
-  const [errors, setErrors] = useState<{ fullName?: string; phoneNumber?: string; email?: string }>({});
+  const [errors, setErrors] = useState<{ fullName?: string; schoolName?: string; phoneNumber?: string; email?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
   const validate = () => {
-    const errs: { fullName?: string; phoneNumber?: string; email?: string } = {};
+    const errs: { fullName?: string; schoolName?: string; phoneNumber?: string; email?: string } = {};
 
     if (!fullName.trim() || fullName.trim().length < 3) {
       errs.fullName = 'Please enter your full name (at least 3 characters)';
+    }
+
+    if (!schoolName.trim() || schoolName.trim().length < 2) {
+      errs.schoolName = 'Please enter your school name';
     }
 
     if (!phoneNumber.trim()) {
@@ -51,7 +56,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
       fullName: fullName.trim(),
       phoneNumber: phoneNumber.trim(),
       email: email.trim().toLowerCase(),
-      school: SCHOOL_INFO.fullName,
+      school: schoolName.trim(),
       grade: `Grade ${grade}`,
       registeredAt: new Date().toISOString(),
     };
@@ -106,7 +111,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
                     setFullName(e.target.value);
                     if (errors.fullName) setErrors({ ...errors, fullName: undefined });
                   }}
-                  placeholder="e.g. Tolossa Bekele Gemechu"
+                  placeholder="e.g. Rebira Sisay Giti"
                   className={`w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:ring-2 ${
                     errors.fullName
                       ? 'border-rose-400 focus:ring-rose-200'
@@ -116,6 +121,31 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
               </div>
               {errors.fullName && (
                 <p className="mt-1 text-xs text-rose-500">{errors.fullName}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                School Name <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={schoolName}
+                  onChange={(e) => {
+                    setSchoolName(e.target.value);
+                    if (errors.schoolName) setErrors({ ...errors, schoolName: undefined });
+                  }}
+                  placeholder="e.g. Ambo Ifa Boru Special Boarding Secondary School"
+                  className={`w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:ring-2 ${
+                    errors.schoolName
+                      ? 'border-rose-400 focus:ring-rose-200'
+                      : 'border-slate-300 focus:border-teal-600 focus:ring-teal-100'
+                  }`}
+                />
+              </div>
+              {errors.schoolName && (
+                <p className="mt-1 text-xs text-rose-500">{errors.schoolName}</p>
               )}
             </div>
 
