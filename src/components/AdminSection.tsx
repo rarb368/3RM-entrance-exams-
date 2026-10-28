@@ -196,6 +196,15 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
     setBroadcastSuccessMessage(null);
     setBroadcastErrorMessage(null);
 
+    const selectedStudent = students.find(
+      (s) => s.email === broadcastRecipient || s.fullName.toLowerCase() === broadcastRecipient.toLowerCase()
+    );
+    const recipientName = selectedStudent
+      ? selectedStudent.fullName
+      : broadcastRecipient === 'all'
+      ? 'All Registered Students'
+      : broadcastRecipient;
+
     try {
       const res = await fetch('/api/admin/messages', {
         method: 'POST',
@@ -207,6 +216,7 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
           title: broadcastTitle.trim() || 'Notice from Admin',
           text: broadcastText.trim(),
           recipient: broadcastRecipient,
+          recipientName,
         }),
       });
       const data = await res.json();
@@ -641,19 +651,23 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
           <form onSubmit={handleSendBroadcast} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Recipient
+                Recipient (All Registered Students or Individual by Name)
               </label>
               <select
                 value={broadcastRecipient}
                 onChange={(e) => setBroadcastRecipient(e.target.value)}
                 className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 outline-none focus:border-[#00897b] bg-slate-50/50"
               >
-                <option value="all">📢 All Registered Students (Broadcast)</option>
-                {students.map((st) => (
-                  <option key={st.email} value={st.email}>
-                    👤 {st.fullName} ({st.email})
-                  </option>
-                ))}
+                <option value="all">📢 All Registered Students (Broadcast to All)</option>
+                {students.length > 0 && (
+                  <optgroup label="Individual Student by Name">
+                    {students.map((st) => (
+                      <option key={st.email} value={st.email}>
+                        👤 {st.fullName} (Grade {st.grade} • {st.school || 'AIBSBSS'})
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
             </div>
 

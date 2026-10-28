@@ -72,6 +72,7 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
+  const [isTimerHidden, setIsTimerHidden] = useState(false);
 
   const questionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -211,17 +212,20 @@ export const ExamScreen: React.FC<ExamScreenProps> = ({
 
           {/* Right: Digital Countdown Timer, Palette, and Finish Button */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Timer Badge */}
-            <div
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs sm:text-sm font-black tracking-widest ${
-                remainingSeconds <= 300
+            {/* Timer Badge - Tap to toggle visibility */}
+            <button
+              type="button"
+              onClick={() => setIsTimerHidden((prev) => !prev)}
+              title={isTimerHidden ? "Touch to show countdown" : "Touch to hide countdown"}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs sm:text-sm font-black tracking-widest cursor-pointer select-none transition active:scale-95 ${
+                remainingSeconds <= 300 && !isTimerHidden
                   ? 'bg-rose-500 text-white animate-pulse'
-                  : 'bg-teal-900/80 text-amber-300 border border-teal-600/50'
+                  : 'bg-teal-900/80 text-amber-300 border border-teal-600/50 hover:bg-teal-900'
               }`}
             >
-              <Clock className="w-3.5 h-3.5" />
-              <span>{formatDurationHHMMSS(remainingSeconds)}</span>
-            </div>
+              <Clock className="w-3.5 h-3.5 shrink-0" />
+              <span>{isTimerHidden ? '••:••:••' : formatDurationHHMMSS(remainingSeconds)}</span>
+            </button>
 
             {/* Question Palette Trigger */}
             <button

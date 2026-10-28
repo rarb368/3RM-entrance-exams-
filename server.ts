@@ -24,7 +24,8 @@ if (!fs.existsSync(DB_DIR)) {
 export interface AdminMessage {
   id: string;
   sender: string;
-  recipient: string; // 'all' or student email
+  recipient: string; // 'all', student email, or student name
+  recipientName?: string;
   title: string;
   text: string;
   createdAt: string;
@@ -238,7 +239,7 @@ app.delete('/api/admin/questions/:id', authenticateAdmin, (req: Request, res: Re
 
 // 7. Admin: Send Announcement / Message to Students
 app.post('/api/admin/messages', authenticateAdmin, (req: Request, res: Response) => {
-  const { recipient, title, text } = req.body;
+  const { recipient, recipientName, title, text } = req.body;
   if (!text || !text.trim()) {
     return res.status(400).json({ success: false, error: 'Message text cannot be empty' });
   }
@@ -248,6 +249,7 @@ app.post('/api/admin/messages', authenticateAdmin, (req: Request, res: Response)
     id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
     sender: 'Rebira Sisay Giti (Admin)',
     recipient: recipient?.trim() || 'all',
+    recipientName: recipientName?.trim() || (recipient === 'all' ? 'All Registered Students' : recipient),
     title: title?.trim() || 'Notice from Admin',
     text: text.trim(),
     createdAt: new Date().toISOString(),
@@ -261,10 +263,16 @@ app.post('/api/admin/messages', authenticateAdmin, (req: Request, res: Response)
 // 8. Public / Student: Fetch Messages
 app.get('/api/messages', (req: Request, res: Response) => {
   const email = (req.query.email as string)?.toLowerCase();
+  const name = (req.query.name as string)?.toLowerCase();
   const db = readDatabase();
-  const filtered = (db.messages || []).filter(
-    (m) => m.recipient === 'all' || (email && m.recipient.toLowerCase() === email)
-  );
+  const filtered = (db.messages || []).filter((m) => {
+    if (m.recipient === 'all') return true;
+    const rLower = m.recipient.toLowerCase();
+    const rNameLower = (m.recipientName || '').toLowerCase();
+    if (email && (rLower === email || rNameLower === email)) return true;
+    if (name && (rLower === name || rNameLower === name)) return true;
+    return false;
+  });
   return res.json({ success: true, messages: filtered });
 });
 

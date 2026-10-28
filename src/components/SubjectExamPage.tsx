@@ -320,83 +320,7 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
 
       {/* Main Container */}
       <div className="max-w-md mx-auto px-4 pt-3">
-        {isSpecialCategorySubject ? (
-          /* =========================================================================
-             SPECIAL CATEGORY VIEW FOR ENGLISH & APTITUDE (Matching User Screenshots)
-             ========================================================================= */
-          <div className="space-y-3">
-            {(subjectId === 'english' ? ENGLISH_CATEGORIES : APTITUDE_CATEGORIES).map(
-              (cat) => {
-                const matchingQuestions = filterQuestionsByCategory(
-                  subjectId,
-                  cat.title,
-                  activeTab
-                );
-                const qCount = matchingQuestions.length;
-                const stats = StorageService.getUnitStats(subjectId, cat.title);
-                const progressPct = stats?.bestScore || 0;
-                const durationSec = Math.max(120, qCount * 120);
-
-                return (
-                  <div
-                    key={cat.categoryNumber}
-                    onClick={() => {
-                      if (qCount === 0) {
-                        setSoonModalMessage(
-                          'No examination questions currently available for this category. Rebira will add them soon.'
-                        );
-                        return;
-                      }
-                      setModeModalTarget({
-                        unitTitle: cat.title,
-                        year:
-                          activeTab !== 'All'
-                            ? (activeTab.replace(/\s*(Na|So)$/i, '').trim() as ExamYear)
-                            : undefined,
-                        isUnitPractice: true,
-                        title: `${config.title} — Category ${cat.categoryNumber}: ${cat.title}`,
-                        questionCount: qCount,
-                        durationSeconds: durationSec,
-                      });
-                    }}
-                    className="bg-white rounded-xl p-3.5 shadow-2xs border border-slate-200/90 hover:shadow-md transition active:scale-[0.99] cursor-pointer flex items-center gap-3.5"
-                  >
-                    {/* Pink/Red Circular Badge with Category Number */}
-                    <div className="w-12 h-12 rounded-full bg-[#e91e63] text-white font-black text-lg flex items-center justify-center shrink-0 shadow-xs">
-                      {cat.categoryNumber}
-                    </div>
-
-                    {/* Category Details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between text-xs mb-0.5">
-                        <span className="font-bold text-slate-900 text-sm">
-                          Category {cat.categoryNumber}
-                        </span>
-                        <span className="text-slate-500 font-medium">
-                          {qCount} {qCount === 1 ? 'ques' : 'ques'}
-                        </span>
-                      </div>
-
-                      <h4 className="font-medium text-slate-800 text-xs sm:text-sm truncate">
-                        {cat.title}
-                      </h4>
-
-                      {/* Participation Level Bar */}
-                      <div className="mt-2 w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            progressPct > 0 ? 'bg-[#43a047]' : 'bg-[#e53935] w-2'
-                          }`}
-                          style={{ width: progressPct > 0 ? `${progressPct}%` : '8px' }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-            )}
-          </div>
-        ) : showCategoryExplorer ? (
+        {showCategoryExplorer ? (
           /* VIEW 1: CATEGORY HIERARCHY TREE EXPLORER FOR SCIENCE SUBJECTS */
           <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
             <div className="flex items-center justify-between mb-4 pb-2 border-b">
@@ -617,8 +541,82 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
               );
             })}
           </div>
+        ) : isSpecialCategorySubject ? (
+          /* VIEW 3A: SPECIAL CATEGORY VIEW FOR ENGLISH & APTITUDE WHEN TOUCHING A SPECIFIC YEAR */
+          <div className="space-y-3">
+            {(subjectId === 'english' ? ENGLISH_CATEGORIES : APTITUDE_CATEGORIES).map(
+              (cat) => {
+                const matchingQuestions = filterQuestionsByCategory(
+                  subjectId,
+                  cat.title,
+                  activeTab
+                );
+                const qCount = matchingQuestions.length;
+                const stats = StorageService.getUnitStats(subjectId, cat.title);
+                const progressPct = stats?.bestScore || 0;
+                const durationSec = Math.max(120, qCount * 120);
+
+                return (
+                  <div
+                    key={cat.categoryNumber}
+                    onClick={() => {
+                      if (qCount === 0) {
+                        setSoonModalMessage(
+                          'No examination questions currently available for this category. Rebira will add them soon.'
+                        );
+                        return;
+                      }
+                      setModeModalTarget({
+                        unitTitle: cat.title,
+                        year:
+                          activeTab !== 'All'
+                            ? (activeTab.replace(/\s*(Na|So)$/i, '').trim() as ExamYear)
+                            : undefined,
+                        isUnitPractice: true,
+                        title: `${config.title} — Category ${cat.categoryNumber}: ${cat.title}`,
+                        questionCount: qCount,
+                        durationSeconds: durationSec,
+                      });
+                    }}
+                    className="bg-white rounded-xl p-3.5 shadow-2xs border border-slate-200/90 hover:shadow-md transition active:scale-[0.99] cursor-pointer flex items-center gap-3.5"
+                  >
+                    {/* Pink/Red Circular Badge with Category Number */}
+                    <div className="w-12 h-12 rounded-full bg-[#e91e63] text-white font-black text-lg flex items-center justify-center shrink-0 shadow-xs">
+                      {cat.categoryNumber}
+                    </div>
+
+                    {/* Category Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between text-xs mb-0.5">
+                        <span className="font-bold text-slate-900 text-sm">
+                          Category {cat.categoryNumber}
+                        </span>
+                        <span className="text-slate-500 font-medium">
+                          {qCount} {qCount === 1 ? 'ques' : 'ques'}
+                        </span>
+                      </div>
+
+                      <h4 className="font-medium text-slate-800 text-xs sm:text-sm truncate">
+                        {cat.title}
+                      </h4>
+
+                      {/* Participation Level Bar */}
+                      <div className="mt-2 w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            progressPct > 0 ? 'bg-[#43a047]' : 'bg-[#e53935] w-2'
+                          }`}
+                          style={{ width: progressPct > 0 ? `${progressPct}%` : '8px' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+            )}
+          </div>
         ) : (
-          /* VIEW 3: PRACTICE BY UNIT FOR SCIENCE SUBJECTS */
+          /* VIEW 3B: PRACTICE BY UNIT FOR SCIENCE SUBJECTS */
           <div className="space-y-3">
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
               <button

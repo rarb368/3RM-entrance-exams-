@@ -83,7 +83,10 @@ export default function App() {
   const fetchAdminMessages = async () => {
     try {
       const email = profile?.email || '';
-      const res = await fetch(`/api/messages?email=${encodeURIComponent(email)}`);
+      const name = profile?.fullName || '';
+      const res = await fetch(
+        `/api/messages?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}`
+      );
       const data = await res.json();
       if (data.success && data.messages) {
         setAdminNotices(data.messages);
@@ -95,7 +98,7 @@ export default function App() {
     fetchAdminMessages();
     const interval = setInterval(fetchAdminMessages, 30000);
     return () => clearInterval(interval);
-  }, [profile?.email]);
+  }, [profile?.email, profile?.fullName]);
 
   const unreadCount = adminNotices.filter((m) => !readMessageIds.includes(m.id)).length;
 
