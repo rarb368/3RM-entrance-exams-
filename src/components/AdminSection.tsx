@@ -50,8 +50,15 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
   const [broadcastErrorMessage, setBroadcastErrorMessage] = useState<string | null>(null);
   const [isSendingBroadcast, setIsSendingBroadcast] = useState(false);
 
-  // Students state
-  const [students, setStudents] = useState<AdminStudentSummary[]>([]);
+  // Students state - initialized with cached students to prevent blank displays during reloads
+  const [students, setStudents] = useState<AdminStudentSummary[]>(() => {
+    try {
+      const cached = localStorage.getItem('3rm_admin_cached_students');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'score' | 'attempts'>('date');
   const [isLoadingStudents, setIsLoadingStudents] = useState(false);
@@ -81,7 +88,7 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
         handleLogout();
       }
     } catch {
-      handleLogout();
+      // If network transient failure, don't automatically wipe out credentials
     }
   };
 
@@ -126,7 +133,6 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
     }
     sessionStorage.removeItem('3rm_admin_token');
     setAuthToken(null);
-    setStudents([]);
   };
 
   const fetchStudents = async (token: string) => {
@@ -136,8 +142,11 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (data.success && data.students) {
+      if (data.success && Array.isArray(data.students)) {
         setStudents(data.students);
+        try {
+          localStorage.setItem('3rm_admin_cached_students', JSON.stringify(data.students));
+        } catch {}
       }
     } catch (e) {
       console.error('Failed to load students', e);

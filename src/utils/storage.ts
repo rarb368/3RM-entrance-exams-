@@ -35,6 +35,22 @@ export const StorageService = {
     localStorage.removeItem(STORAGE_KEYS.PROFILE);
   },
 
+  syncCurrentStateToBackend(): void {
+    try {
+      const currentProfile = this.getProfile();
+      const attempts = this.getAttempts();
+      if (currentProfile) {
+        fetch('/api/students/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profile: currentProfile, attempts }),
+        }).catch(() => {});
+      }
+    } catch (e) {
+      console.error('Failed to sync current state', e);
+    }
+  },
+
   // Attempts
   getAttempts(): ExamAttempt[] {
     try {

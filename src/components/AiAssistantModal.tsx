@@ -17,6 +17,65 @@ interface ChatMessage {
   timestamp: string;
 }
 
+const formatInlineBold = (text: string) => {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return (
+        <strong key={i} className="font-bold text-slate-950">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
+  });
+};
+
+const renderFormattedAiText = (text: string) => {
+  const lines = text.split('\n');
+  return (
+    <div className="space-y-1.5 text-xs sm:text-sm">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          return <div key={idx} className="h-1" />;
+        }
+
+        if (trimmed.startsWith('###')) {
+          const content = trimmed.replace(/^#+\s*/, '');
+          return (
+            <h4 key={idx} className="font-bold text-teal-800 text-xs sm:text-sm mt-2 mb-0.5">
+              {content}
+            </h4>
+          );
+        }
+
+        if (trimmed.startsWith('* ') || trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
+          const content = trimmed.replace(/^[*•-]\s+/, '');
+          return (
+            <div key={idx} className="flex items-start gap-1.5 ml-1">
+              <span className="text-[#00897b] font-bold shrink-0">•</span>
+              <span className="flex-1">{formatInlineBold(content)}</span>
+            </div>
+          );
+        }
+
+        const numMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
+        if (numMatch) {
+          return (
+            <div key={idx} className="flex items-start gap-1.5 ml-1">
+              <span className="font-bold text-[#00897b] shrink-0">{numMatch[1]}.</span>
+              <span className="flex-1">{formatInlineBold(numMatch[2])}</span>
+            </div>
+          );
+        }
+
+        return <p key={idx}>{formatInlineBold(trimmed)}</p>;
+      })}
+    </div>
+  );
+};
+
 export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({
   isOpen,
   onClose,
@@ -67,6 +126,10 @@ I'm here to explain exam questions, break down formulas, clarify vocabulary, and
         body: JSON.stringify({
           prompt: text,
           subject: subjectTitle,
+          history: messages.slice(-6).map((m) => ({
+            sender: m.sender,
+            text: m.text,
+          })),
           questionContext: currentQuestion
             ? {
                 subject: currentQuestion.subject,
@@ -194,7 +257,7 @@ I'm here to explain exam questions, break down formulas, clarify vocabulary, and
                       : 'bg-white text-slate-800 border border-slate-200/90 rounded-bl-xs'
                   }`}
                 >
-                  <p>{m.text}</p>
+                  {isUser ? <p>{m.text}</p> : renderFormattedAiText(m.text)}
                   <span
                     className={`block text-[10px] mt-1 text-right ${
                       isUser ? 'text-teal-200' : 'text-slate-400'

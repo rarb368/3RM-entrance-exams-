@@ -100,6 +100,11 @@ export default function App() {
     return () => clearInterval(interval);
   }, [profile?.email, profile?.fullName]);
 
+  // Ensure registered student profile and past attempts are automatically synced to the central server
+  useEffect(() => {
+    StorageService.syncCurrentStateToBackend();
+  }, [profile]);
+
   const unreadCount = adminNotices.filter((m) => !readMessageIds.includes(m.id)).length;
 
   const handleMarkAllRead = () => {

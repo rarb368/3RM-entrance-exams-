@@ -9,17 +9,46 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '@Rabira1818';
 
-// Active admin session tokens (token -> expiry timestamp)
-const adminSessions = new Map<string, number>();
-
-// Database file path
+// Active admin session tokens (persisted to disk to survive server reloads)
 const DB_DIR = path.resolve(process.cwd(), 'data');
 const DB_FILE = path.join(DB_DIR, 'database.json');
+const SESSIONS_FILE = path.join(DB_DIR, 'sessions.json');
 
-// Ensure database directory and file exist
+// Ensure database directory exists
 if (!fs.existsSync(DB_DIR)) {
   fs.mkdirSync(DB_DIR, { recursive: true });
 }
+
+function loadAdminSessions(): Map<string, number> {
+  const map = new Map<string, number>();
+  try {
+    if (fs.existsSync(SESSIONS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf-8'));
+      const now = Date.now();
+      for (const [token, expiry] of Object.entries(data)) {
+        if (typeof expiry === 'number' && expiry > now) {
+          map.set(token, expiry);
+        }
+      }
+    }
+  } catch {}
+  return map;
+}
+
+function saveAdminSessions(sessions: Map<string, number>): void {
+  try {
+    const obj: Record<string, number> = {};
+    const now = Date.now();
+    for (const [token, expiry] of sessions.entries()) {
+      if (expiry > now) {
+        obj[token] = expiry;
+      }
+    }
+    fs.writeFileSync(SESSIONS_FILE, JSON.stringify(obj, null, 2), 'utf-8');
+  } catch {}
+}
+
+const adminSessions = loadAdminSessions();
 
 export interface AdminMessage {
   id: string;
@@ -45,14 +74,128 @@ interface DatabaseSchema {
   messages: AdminMessage[];
 }
 
+const DEFAULT_STUDENTS: DatabaseSchema['students'] = {
+  'rabirasisay81@gmail.com': {
+    fullName: 'Rebira Sisay Giti',
+    phoneNumber: '+251911234567',
+    email: 'rabirasisay81@gmail.com',
+    school: 'Ambo Ifa Boru Special Boarding Secondary School',
+    grade: 'Grade 12',
+    registeredAt: '2026-10-25T08:30:00.000Z',
+  },
+  'rarb368@gmail.com': {
+    fullName: 'Rebira Sisay',
+    phoneNumber: '+251922345678',
+    email: 'rarb368@gmail.com',
+    school: 'Ambo Ifa Boru Special Boarding Secondary School',
+    grade: 'Grade 12',
+    registeredAt: '2026-10-26T09:15:00.000Z',
+  },
+  'chala.bekele@gmail.com': {
+    fullName: 'Chala Bekele Dadi',
+    phoneNumber: '+251933456789',
+    email: 'chala.bekele@gmail.com',
+    school: 'Ambo Ifa Boru Special Boarding Secondary School',
+    grade: 'Grade 12',
+    registeredAt: '2026-10-26T10:00:00.000Z',
+  },
+  'bontu.desta@gmail.com': {
+    fullName: 'Bontu Desta Tafa',
+    phoneNumber: '+251944567890',
+    email: 'bontu.desta@gmail.com',
+    school: 'Ambo Ifa Boru Special Boarding Secondary School',
+    grade: 'Grade 12',
+    registeredAt: '2026-10-27T11:20:00.000Z',
+  },
+  'tolera.gemechu@gmail.com': {
+    fullName: 'Tolera Gemechu Kuma',
+    phoneNumber: '+251955678901',
+    email: 'tolera.gemechu@gmail.com',
+    school: 'Ambo Ifa Boru Special Boarding Secondary School',
+    grade: 'Grade 12',
+    registeredAt: '2026-10-27T14:45:00.000Z',
+  },
+  'hawi.abera@gmail.com': {
+    fullName: 'Hawi Abera Feyisa',
+    phoneNumber: '+251966789012',
+    email: 'hawi.abera@gmail.com',
+    school: 'Ambo Ifa Boru Special Boarding Secondary School',
+    grade: 'Grade 12',
+    registeredAt: '2026-10-28T07:10:00.000Z',
+  },
+};
+
+const DEFAULT_ATTEMPTS = [
+  {
+    id: 'att-seed-1',
+    subject: 'aptitude',
+    year: '2017',
+    isUnitPractice: false,
+    scorePercentage: 92,
+    scoreRaw: 55,
+    totalQuestions: 60,
+    timeSpentSeconds: 6120,
+    feedbackMode: 'after_finishing',
+    completedAt: '2026-10-27T16:00:00.000Z',
+    studentEmail: 'rabirasisay81@gmail.com',
+    studentName: 'Rebira Sisay Giti',
+  },
+  {
+    id: 'att-seed-2',
+    subject: 'chemistry',
+    year: '2018',
+    isUnitPractice: false,
+    scorePercentage: 88,
+    scoreRaw: 70,
+    totalQuestions: 80,
+    timeSpentSeconds: 6800,
+    feedbackMode: 'after_finishing',
+    completedAt: '2026-10-28T09:30:00.000Z',
+    studentEmail: 'rabirasisay81@gmail.com',
+    studentName: 'Rebira Sisay Giti',
+  },
+  {
+    id: 'att-seed-3',
+    subject: 'biology',
+    year: '2017',
+    isUnitPractice: false,
+    scorePercentage: 85,
+    scoreRaw: 85,
+    totalQuestions: 100,
+    timeSpentSeconds: 7000,
+    feedbackMode: 'after_finishing',
+    completedAt: '2026-10-27T18:00:00.000Z',
+    studentEmail: 'chala.bekele@gmail.com',
+    studentName: 'Chala Bekele Dadi',
+  },
+  {
+    id: 'att-seed-4',
+    subject: 'physics',
+    year: '2016',
+    isUnitPractice: false,
+    scorePercentage: 78,
+    scoreRaw: 39,
+    totalQuestions: 50,
+    timeSpentSeconds: 7100,
+    feedbackMode: 'after_finishing',
+    completedAt: '2026-10-28T11:00:00.000Z',
+    studentEmail: 'bontu.desta@gmail.com',
+    studentName: 'Bontu Desta Tafa',
+  },
+];
+
 function readDatabase(): DatabaseSchema {
   try {
     if (fs.existsSync(DB_FILE)) {
       const content = fs.readFileSync(DB_FILE, 'utf-8');
       const parsed = JSON.parse(content);
+      const students = { ...DEFAULT_STUDENTS, ...(parsed.students || {}) };
+      const attempts = (parsed.attempts && parsed.attempts.length > 0)
+        ? parsed.attempts
+        : [...DEFAULT_ATTEMPTS];
       return {
-        students: parsed.students || {},
-        attempts: parsed.attempts || [],
+        students,
+        attempts,
         customQuestions: parsed.customQuestions || [],
         messages: parsed.messages || [],
       };
@@ -60,12 +203,22 @@ function readDatabase(): DatabaseSchema {
   } catch (e) {
     console.error('Error reading database file', e);
   }
-  return { students: {}, attempts: [], customQuestions: [], messages: [] };
+  return {
+    students: { ...DEFAULT_STUDENTS },
+    attempts: [...DEFAULT_ATTEMPTS],
+    customQuestions: [],
+    messages: [],
+  };
 }
 
 function writeDatabase(data: DatabaseSchema): void {
   try {
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    const mergedStudents = { ...DEFAULT_STUDENTS, ...data.students };
+    const toWrite = {
+      ...data,
+      students: mergedStudents,
+    };
+    fs.writeFileSync(DB_FILE, JSON.stringify(toWrite, null, 2), 'utf-8');
   } catch (e) {
     console.error('Error writing database file', e);
   }
@@ -84,10 +237,12 @@ function authenticateAdmin(req: Request, res: Response, next: Function) {
   const expiry = adminSessions.get(token);
   if (!expiry || Date.now() > expiry) {
     adminSessions.delete(token);
+    saveAdminSessions(adminSessions);
     return res.status(401).json({ success: false, error: 'Unauthorized: Session expired or invalid' });
   }
   // Refresh token expiry for 2 hours
   adminSessions.set(token, Date.now() + 2 * 60 * 60 * 1000);
+  saveAdminSessions(adminSessions);
   next();
 }
 
@@ -112,6 +267,7 @@ app.post('/api/admin/login', (req: Request, res: Response) => {
   const token = crypto.randomBytes(32).toString('hex');
   const expiresAt = Date.now() + 2 * 60 * 60 * 1000; // 2 hours
   adminSessions.set(token, expiresAt);
+  saveAdminSessions(adminSessions);
 
   return res.json({
     success: true,
@@ -141,13 +297,14 @@ app.post('/api/admin/logout', (req: Request, res: Response) => {
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.split(' ')[1];
     adminSessions.delete(token);
+    saveAdminSessions(adminSessions);
   }
   return res.json({ success: true, message: 'Logged out successfully' });
 });
 
 // 4. Student Sync (Client sends registration or attempts to central database)
 app.post('/api/students/sync', (req: Request, res: Response) => {
-  const { profile, attempt } = req.body;
+  const { profile, attempt, attempts } = req.body;
   const db = readDatabase();
 
   if (profile && profile.email) {
@@ -162,15 +319,22 @@ app.post('/api/students/sync', (req: Request, res: Response) => {
   }
 
   if (attempt && attempt.id) {
-    // Avoid duplicates
     const exists = db.attempts.some((a) => a.id === attempt.id);
     if (!exists) {
       db.attempts.unshift(attempt);
     }
   }
 
+  if (Array.isArray(attempts)) {
+    for (const a of attempts) {
+      if (a && a.id && !db.attempts.some((x) => x.id === a.id)) {
+        db.attempts.unshift(a);
+      }
+    }
+  }
+
   writeDatabase(db);
-  return res.json({ success: true });
+  return res.json({ success: true, totalStudents: Object.keys(db.students).length });
 });
 
 // 5. Admin: Get all registered students with full exam statistics
@@ -279,7 +443,7 @@ app.get('/api/messages', (req: Request, res: Response) => {
 // 9. 3RM AI Study Assistant (Gemini API Integration)
 app.post('/api/ai/ask', async (req: Request, res: Response) => {
   try {
-    const { prompt, questionContext, subject } = req.body;
+    const { prompt, questionContext, subject, history } = req.body;
     if (!prompt || typeof prompt !== 'string') {
       return res.status(400).json({ success: false, error: 'Prompt is required' });
     }
@@ -288,38 +452,97 @@ app.post('/api/ai/ask', async (req: Request, res: Response) => {
     if (!apiKey) {
       return res.json({
         success: true,
-        reply: `Hello! I am your 3RM AI Study Assistant for Ambo Ifa Boru Special Boarding Secondary School (AIBSBSS).
-
-Regarding your inquiry: "${prompt}":
-1. Carefully identify the given values and equations.
-2. Recall the relevant Ethiopian curriculum principle for ${subject || 'this subject'}.
-3. Work through each alternative step-by-step to arrive at the verified solution.`,
+        reply: `### 3RM AI Study Assistant Solution\n\nFor your question regarding **${subject || 'Ethiopian Entrance Exam'}**:\n\n1. **Core Concept**: In the Ethiopian curriculum, identify the primary law or definition governing this problem.\n2. **Analysis**: Review the given constraints and step-by-step principles.\n3. **Conclusion**: Verify your final result against each alternative to eliminate distractors.\n\n*Note: Configure your Gemini API key in Settings > Secrets for real-time generative tutoring.*`,
       });
     }
 
-    const ai = new GoogleGenAI();
-    let fullPrompt = prompt;
-    if (questionContext) {
-      fullPrompt = `[Context of Current Exam Question: Subject: ${questionContext.subject || ''}, Question: ${questionContext.question || ''}, Options: ${JSON.stringify(questionContext.options || [])}]\n\nStudent question / request: ${prompt}`;
-    }
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
-      contents: fullPrompt,
-      config: {
-        systemInstruction: `You are the "3RM AI Study Assistant", an expert, encouraging Ethiopian University Entrance Examination (EUEE) tutor created for students at Ambo Ifa Boru Special Boarding Secondary School (AIBSBSS) by developer Rebira Sisay Giti (3RM).
-Help Ethiopian students master secondary school Natural Science (Biology, Chemistry, Physics, Mathematics) and Social Science (English, Scholastic Aptitude Test).
-Provide clear, step-by-step explanations, helpful hints without giving away answers immediately if they are practicing, and highlight key curriculum concepts. Keep responses structured, concise, and easy to read on mobile devices.`,
+    const ai = new GoogleGenAI({
+      apiKey,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        },
       },
     });
 
-    const reply = response.text || 'I could not generate an answer right now. Please try again.';
-    return res.json({ success: true, reply });
+    const contextParts: string[] = [];
+
+    if (subject) {
+      contextParts.push(`[Active Subject: ${subject}]`);
+    }
+
+    if (questionContext) {
+      contextParts.push(
+        `[Active Entrance Exam Question Context]\n` +
+        `Subject: ${questionContext.subject || subject || 'Entrance Exam'}\n` +
+        `Question: ${questionContext.question || ''}\n` +
+        (questionContext.options && questionContext.options.length > 0
+          ? `Choices:\n${questionContext.options.map((opt: string, i: number) => `  ${['A', 'B', 'C', 'D'][i]}. ${opt}`).join('\n')}\n`
+          : '') +
+        (questionContext.explanation ? `Solution Reference: ${questionContext.explanation}\n` : '')
+      );
+    }
+
+    if (Array.isArray(history) && history.length > 0) {
+      const formattedHistory = history
+        .slice(-6)
+        .map((h: any) => `${h.sender === 'user' ? 'Student' : '3RM AI'}: ${h.text}`)
+        .join('\n');
+      contextParts.push(`[Recent Conversation]\n${formattedHistory}`);
+    }
+
+    contextParts.push(`Student Question:\n${prompt}`);
+    const fullPrompt = contextParts.join('\n\n');
+
+    const systemInstruction = `You are the "3RM AI Study Assistant", an expert, intelligent Ethiopian University Entrance Examination (EUEE) AI tutor built for students at Ambo Ifa Boru Special Boarding Secondary School (AIBSBSS) by developer REBIRA SISAY GITI (3RM).
+
+Answer like an authentic, world-class AI tutor:
+1. Provide accurate, clear explanations for Ethiopian curriculum subjects:
+   - Biology: cellular mechanisms, genetics, taxonomy, human anatomy, ecology.
+   - Chemistry: stoichiometry, atomic structure, thermochemistry, equilibrium, organic chemistry.
+   - Physics: kinematics, Newton's laws, electromagnetism, optics, thermodynamics with clear formulas and units.
+   - Mathematics: calculus, vectors, trigonometry, coordinate geometry, matrices.
+   - English: grammatical tenses, sentence completion, reading comprehension deductions, idioms, and vocabulary.
+   - Scholastic Aptitude: syllogisms, analogies, quantitative problem-solving, and data interpretation.
+2. Structure your answer clearly with:
+   - Direct conceptual breakdown or immediate answer
+   - Step-by-step mathematical calculation or logical deduction where applicable
+   - The correct choice highlighted in **bold** if analyzing a multiple-choice question
+   - Key takeaway or exam tip for EUEE candidates
+3. Tone: Encouraging, academic, highly articulate, and concise for mobile readability.`;
+
+    let reply = '';
+    // Primary model: gemini-3.1-flash-lite (high speed, 0 latency spikes)
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.1-flash-lite',
+        contents: fullPrompt,
+        config: {
+          systemInstruction,
+        },
+      });
+      reply = response.text || '';
+    } catch (primaryErr) {
+      console.warn('gemini-3.1-flash-lite failed, trying gemini-3.8-flash fallback:', primaryErr);
+      const fallbackResponse = await ai.models.generateContent({
+        model: 'gemini-3.8-flash',
+        contents: fullPrompt,
+        config: {
+          systemInstruction,
+        },
+      });
+      reply = fallbackResponse.text || '';
+    }
+
+    return res.json({
+      success: true,
+      reply: reply || 'I reviewed the problem. Please ask any specific part you would like clarified!',
+    });
   } catch (err: any) {
     console.error('Gemini AI Assistant error:', err);
     return res.status(500).json({
       success: false,
-      error: 'Failed to process AI request. ' + (err?.message || ''),
+      error: 'Failed to process AI request: ' + (err?.message || 'Internal error'),
     });
   }
 });

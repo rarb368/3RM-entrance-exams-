@@ -1,0 +1,130 @@
+{
+  "students": {
+    "rabirasisay81@gmail.com": {
+      "fullName": "Rebira Sisay Giti",
+      "phoneNumber": "+251911234567",
+      "email": "rabirasisay81@gmail.com",
+      "school": "Ambo Ifa Boru Special Boarding Secondary School",
+      "grade": "Grade 12",
+      "registeredAt": "2026-10-25T08:30:00.000Z"
+    },
+    "rarb368@gmail.com": {
+      "fullName": "Rebira Sisay",
+      "phoneNumber": "+251922345678",
+      "email": "rarb368@gmail.com",
+      "school": "Ambo Ifa Boru Special Boarding Secondary School",
+      "grade": "Grade 12",
+      "registeredAt": "2026-10-26T09:15:00.000Z"
+    },
+    "chala.bekele@gmail.com": {
+      "fullName": "Chala Bekele Dadi",
+      "phoneNumber": "+251933456789",
+      "email": "chala.bekele@gmail.com",
+      "school": "Ambo Ifa Boru Special Boarding Secondary School",
+      "grade": "Grade 12",
+      "registeredAt": "2026-10-26T10:00:00.000Z"
+    },
+    "bontu.desta@gmail.com": {
+      "fullName": "Bontu Desta Tafa",
+      "phoneNumber": "+251944567890",
+      "email": "bontu.desta@gmail.com",
+      "school": "Ambo Ifa Boru Special Boarding Secondary School",
+      "grade": "Grade 12",
+      "registeredAt": "2026-10-27T11:20:00.000Z"
+    },
+    "tolera.gemechu@gmail.com": {
+      "fullName": "Tolera Gemechu Kuma",
+      "phoneNumber": "+251955678901",
+      "email": "tolera.gemechu@gmail.com",
+      "school": "Ambo Ifa Boru Special Boarding Secondary School",
+      "grade": "Grade 12",
+      "registeredAt": "2026-10-27T14:45:00.000Z"
+    },
+    "hawi.abera@gmail.com": {
+      "fullName": "Hawi Abera Feyisa",
+      "phoneNumber": "+251966789012",
+      "email": "hawi.abera@gmail.com",
+      "school": "Ambo Ifa Boru Special Boarding Secondary School",
+      "grade": "Grade 12",
+      "registeredAt": "2026-10-28T07:10:00.000Z"
+    },
+    "kenenisa@aibsbss.edu.et": {
+      "fullName": "Kenenisa Bekele",
+      "phoneNumber": "+251977889900",
+      "email": "kenenisa@aibsbss.edu.et",
+      "school": "Ambo Ifa Boru Special Boarding Secondary School",
+      "grade": "Grade 12",
+      "registeredAt": "2026-10-28T23:12:42.415Z"
+    }
+  },
+  "attempts": [
+    {
+      "id": "att-seed-1",
+      "subject": "aptitude",
+      "year": "2017",
+      "isUnitPractice": false,
+      "scorePercentage": 92,
+      "scoreRaw": 55,
+      "totalQuestions": 60,
+      "timeSpentSeconds": 6120,
+      "feedbackMode": "after_finishing",
+      "completedAt": "2026-10-27T16:00:00.000Z",
+      "studentEmail": "rabirasisay81@gmail.com",
+      "studentName": "Rebira Sisay Giti"
+    },
+    {
+      "id": "att-seed-2",
+      "subject": "chemistry",
+      "year": "2018",
+      "isUnitPractice": false,
+      "scorePercentage": 88,
+      "scoreRaw": 70,
+      "totalQuestions": 80,
+      "timeSpentSeconds": 6800,
+      "feedbackMode": "after_finishing",
+      "completedAt": "2026-10-28T09:30:00.000Z",
+      "studentEmail": "rabirasisay81@gmail.com",
+      "studentName": "Rebira Sisay Giti"
+    },
+    {
+      "id": "att-seed-3",
+      "subject": "biology",
+      "year": "2017",
+      "isUnitPractice": false,
+      "scorePercentage": 85,
+      "scoreRaw": 85,
+      "totalQuestions": 100,
+      "timeSpentSeconds": 7000,
+      "feedbackMode": "after_finishing",
+      "completedAt": "2026-10-27T18:00:00.000Z",
+      "studentEmail": "chala.bekele@gmail.com",
+      "studentName": "Chala Bekele Dadi"
+    },
+    {
+      "id": "att-seed-4",
+      "subject": "physics",
+      "year": "2016",
+      "isUnitPractice": false,
+      "scorePercentage": 78,
+      "scoreRaw": 39,
+      "totalQuestions": 50,
+      "timeSpentSeconds": 7100,
+      "feedbackMode": "after_finishing",
+      "completedAt": "2026-10-28T11:00:00.000Z",
+      "studentEmail": "bontu.desta@gmail.com",
+      "studentName": "Bontu Desta Tafa"
+    }
+  ],
+  "customQuestions": [],
+  "messages": [
+    {
+      "id": "msg-1793228044330-97gey",
+      "sender": "Rebira Sisay Giti (Admin)",
+      "recipient": "all",
+      "recipientName": "All Registered Students",
+      "title": "Welcome to AIBSBSS EUEE Portal",
+      "text": "Welcome to Rebira's Ethiopian University Entrance Exam Portal for Ambo Ifa Boru Special Boarding Secondary School! Practice 2018, 2017, and 2016 entrance exams with step-by-step explanations.",
+      "createdAt": "2026-10-28T22:54:04.330Z"
+    }
+  ]
+}
