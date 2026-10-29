@@ -545,6 +545,216 @@ export const DiagramViewer: React.FC<DiagramViewerProps> = ({ diagramType, diagr
         </div>
       );
 
+    // 16b. Triangles in Square Puzzle (Aptitude 2017 Q36)
+    case 'triangles-puzzle':
+      return (
+        <div className="my-3 p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col items-center">
+          <svg className="w-56 h-56 max-w-full" viewBox="0 0 200 200" fill="none">
+            {/* Outer square */}
+            <rect x="20" y="20" width="160" height="160" stroke="#0f172a" strokeWidth="2.5" fill="#f8fafc" />
+            {/* Diagonals */}
+            <line x1="20" y1="20" x2="180" y2="180" stroke="#0f172a" strokeWidth="2" />
+            <line x1="180" y1="20" x2="20" y2="180" stroke="#0f172a" strokeWidth="2" />
+            {/* Horizontal & vertical bisectors */}
+            <line x1="20" y1="100" x2="180" y2="100" stroke="#0f172a" strokeWidth="2" />
+            <line x1="100" y1="20" x2="100" y2="180" stroke="#0f172a" strokeWidth="2" />
+            {/* Center dot */}
+            <circle cx="100" cy="100" r="3.5" fill="#e11d48" />
+          </svg>
+          <span className="text-[11px] text-slate-500 font-semibold mt-1">
+            Figure: Square with Diagonals & Bisectors (Total 16 Triangles)
+          </span>
+        </div>
+      );
+
+    // 16c. Circle Secants & Tangents (Maths 2018 Q18)
+    case 'math-circle-secant':
+      return (
+        <div className="my-3 p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col items-center">
+          <svg className="w-72 h-56 max-w-full" viewBox="0 0 320 220" fill="none">
+            <circle cx="190" cy="110" r="75" stroke="#1e293b" strokeWidth="2" fill="#f8fafc" />
+            <circle cx="35" cy="110" r="4" fill="#d97706" />
+            <text x="22" y="115" fill="#d97706" fontSize="13" fontWeight="bold">A</text>
+            <line x1="35" y1="110" x2="255" y2="70" stroke="#0369a1" strokeWidth="2" />
+            <circle cx="120" cy="95" r="3.5" fill="#0369a1" />
+            <text x="115" y="85" fill="#0369a1" fontSize="12" fontWeight="bold">B</text>
+            <circle cx="255" cy="70" r="3.5" fill="#0369a1" />
+            <text x="262" y="70" fill="#0369a1" fontSize="12" fontWeight="bold">D</text>
+            <line x1="35" y1="110" x2="185" y2="185" stroke="#059669" strokeWidth="2" />
+            <circle cx="185" cy="185" r="3.5" fill="#059669" />
+            <text x="190" y="200" fill="#059669" fontSize="12" fontWeight="bold">C</text>
+            <path d="M 65 105 A 30 30 0 0 1 65 118" stroke="#d97706" strokeWidth="1.5" fill="none" />
+            <text x="72" y="114" fill="#d97706" fontSize="11" fontWeight="bold">15°</text>
+            <text x="155" y="55" fill="#0369a1" fontSize="11" fontWeight="bold">Arc BC = 70°</text>
+            <text x="225" y="160" fill="#059669" fontSize="11" fontWeight="bold">Arc CD = 40°</text>
+          </svg>
+          <span className="text-[11px] text-slate-500 font-semibold mt-1">
+            Figure: Secant ABD & Tangent AC Intersecting Outside Circle
+          </span>
+        </div>
+      );
+
+    // 16d. Square Masses Center of Mass (Physics 2018 Q4)
+    case 'phys-square-masses':
+      return (
+        <div className="my-3 p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col items-center">
+          <svg className="w-64 h-64 max-w-full" viewBox="0 0 240 240" fill="none">
+            <line x1="30" y1="200" x2="220" y2="200" stroke="#64748b" strokeWidth="2" />
+            <line x1="40" y1="210" x2="40" y2="20" stroke="#64748b" strokeWidth="2" />
+            <text x="215" y="215" fill="#64748b" fontSize="11" fontWeight="bold">x (cm)</text>
+            <text x="15" y="30" fill="#64748b" fontSize="11" fontWeight="bold">y (cm)</text>
+            <rect x="40" y="60" width="140" height="140" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4 4" fill="#f8fafc" />
+            <circle cx="40" cy="200" r="8" fill="#3b82f6" />
+            <text x="45" y="215" fill="#1e3a8a" fontSize="10" fontWeight="bold">m₁=200g (0,0)</text>
+            <circle cx="40" cy="60" r="8" fill="#3b82f6" />
+            <text x="45" y="55" fill="#1e3a8a" fontSize="10" fontWeight="bold">m₂=200g (0,50)</text>
+            <circle cx="180" cy="60" r="13" fill="#ef4444" />
+            <text x="135" y="45" fill="#7f1d1d" fontSize="10" fontWeight="bold">m₃=500g (50,50)</text>
+            <circle cx="180" cy="200" r="13" fill="#ef4444" />
+            <text x="135" y="225" fill="#7f1d1d" fontSize="10" fontWeight="bold">m₄=500g (50,0)</text>
+            <circle cx="140" cy="130" r="6" fill="#10b981" />
+            <text x="150" y="132" fill="#065f46" fontSize="11" fontWeight="bold">CM (35.71, 25)</text>
+          </svg>
+          <span className="text-[11px] text-slate-500 font-semibold mt-1">
+            Figure: Center of Mass of Discrete Masses on 50cm × 50cm Square
+          </span>
+        </div>
+      );
+
+    // 16e. Wire Loop Field (Physics 2018 Q6)
+    case 'phys-loop-field':
+      return (
+        <div className="my-3 p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col items-center">
+          <svg className="w-64 h-48 max-w-full" viewBox="0 0 240 180" fill="none">
+            <rect x="50" y="30" width="140" height="100" rx="6" stroke="#0284c7" strokeWidth="3" fill="#f0f9ff" />
+            <rect x="100" y="125" width="40" height="10" fill="#ffffff" />
+            <line x1="110" y1="120" x2="110" y2="140" stroke="#0f172a" strokeWidth="3" />
+            <line x1="125" y1="125" x2="125" y2="135" stroke="#0f172a" strokeWidth="2" />
+            <text x="95" y="120" fill="#0f172a" fontSize="10" fontWeight="bold">+</text>
+            <text x="132" y="120" fill="#0f172a" fontSize="10" fontWeight="bold">-</text>
+            <circle cx="120" cy="75" r="14" stroke="#d97706" strokeWidth="2" fill="#fef3c7" />
+            <circle cx="120" cy="75" r="4" fill="#d97706" />
+            <text x="95" y="105" fill="#d97706" fontSize="10" fontWeight="bold">B-field Direction</text>
+          </svg>
+          <span className="text-[11px] text-slate-500 font-semibold mt-1">
+            Figure: Current Loop & Magnetic Field Direction (Right-Hand Rule)
+          </span>
+        </div>
+      );
+
+    // 16f. Displacement-Time Graph (Physics 2018 Q13)
+    case 'phys-displacement-graph':
+      return (
+        <div className="my-3 p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col items-center">
+          <svg className="w-72 h-52 max-w-full" viewBox="0 0 280 200" fill="none">
+            <line x1="45" y1="160" x2="260" y2="160" stroke="#334155" strokeWidth="2" />
+            <line x1="45" y1="160" x2="45" y2="25" stroke="#334155" strokeWidth="2" />
+            <text x="250" y="175" fill="#475569" fontSize="11" fontWeight="bold">t (s)</text>
+            <text x="10" y="30" fill="#475569" fontSize="11" fontWeight="bold">s (m)</text>
+            <text x="25" y="165" fill="#64748b" fontSize="10">0</text>
+            <line x1="45" y1="50" x2="250" y2="50" stroke="#e2e8f0" strokeDasharray="3 3" />
+            <text x="20" y="54" fill="#0f172a" fontSize="11" fontWeight="bold">80</text>
+            <line x1="120" y1="160" x2="120" y2="50" stroke="#e2e8f0" strokeDasharray="3 3" />
+            <text x="115" y="175" fill="#0f172a" fontSize="11" fontWeight="bold">4</text>
+            <line x1="230" y1="160" x2="230" y2="50" stroke="#e2e8f0" strokeDasharray="3 3" />
+            <text x="225" y="175" fill="#0f172a" fontSize="11" fontWeight="bold">10</text>
+            <line x1="45" y1="160" x2="120" y2="50" stroke="#0284c7" strokeWidth="3" />
+            <line x1="120" y1="50" x2="230" y2="50" stroke="#0284c7" strokeWidth="3" />
+            <circle cx="120" cy="50" r="4" fill="#0284c7" />
+            <circle cx="230" cy="50" r="4" fill="#0284c7" />
+            <text x="60" y="100" fill="#0369a1" fontSize="10" fontWeight="bold">v = 20 m/s</text>
+            <text x="155" y="40" fill="#0369a1" fontSize="10" fontWeight="bold">v = 0 m/s</text>
+          </svg>
+          <span className="text-[11px] text-slate-500 font-semibold mt-1">
+            Figure: Displacement vs Time Graph (0 to 10 seconds)
+          </span>
+        </div>
+      );
+
+    // 16g. Parallel Current Conductors (Physics 2018 Q35)
+    case 'phys-parallel-wires':
+      return (
+        <div className="my-3 p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col items-center">
+          <svg className="w-64 h-52 max-w-full" viewBox="0 0 240 190" fill="none">
+            <line x1="80" y1="20" x2="80" y2="170" stroke="#0284c7" strokeWidth="4" strokeLinecap="round" />
+            <polygon points="80,40 75,55 85,55" fill="#0284c7" />
+            <text x="60" y="45" fill="#0284c7" fontSize="12" fontWeight="bold">I₁</text>
+            <text x="50" y="95" fill="#0369a1" fontSize="11" fontWeight="bold">C₁</text>
+            <line x1="160" y1="20" x2="160" y2="170" stroke="#0284c7" strokeWidth="4" strokeLinecap="round" />
+            <polygon points="160,40 155,55 165,55" fill="#0284c7" />
+            <text x="175" y="45" fill="#0284c7" fontSize="12" fontWeight="bold">I₂</text>
+            <text x="175" y="95" fill="#0369a1" fontSize="11" fontWeight="bold">C₂</text>
+            <line x1="80" y1="95" x2="105" y2="95" stroke="#ef4444" strokeWidth="2.5" />
+            <polygon points="110,95 102,91 102,99" fill="#ef4444" />
+            <text x="90" y="88" fill="#ef4444" fontSize="10" fontWeight="bold">F</text>
+            <line x1="160" y1="95" x2="135" y2="95" stroke="#ef4444" strokeWidth="2.5" />
+            <polygon points="130,95 138,91 138,99" fill="#ef4444" />
+            <text x="140" y="88" fill="#ef4444" fontSize="10" fontWeight="bold">F</text>
+          </svg>
+          <span className="text-[11px] text-slate-500 font-semibold mt-1">
+            Figure: Parallel Current Wires Experience Attractive Lorentz Force
+          </span>
+        </div>
+      );
+
+    // 16h. Hydrostatic Pressure in Containers (Physics 2018 Q37)
+    case 'phys-water-containers':
+      return (
+        <div className="my-3 p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col items-center">
+          <svg className="w-72 h-48 max-w-full" viewBox="0 0 280 180" fill="none">
+            <path d="M 20 90 L 20 145 L 75 145 L 75 90" stroke="#334155" strokeWidth="2" fill="none" />
+            <rect x="22" y="105" width="51" height="38" fill="#bae6fd" />
+            <circle cx="47" cy="140" r="3.5" fill="#0284c7" />
+            <text x="43" y="160" fill="#0f172a" fontSize="11" fontWeight="bold">A</text>
+            <text x="35" y="100" fill="#64748b" fontSize="9">h = 4 cm</text>
+            <path d="M 115 35 L 115 145 L 155 145 L 155 35" stroke="#334155" strokeWidth="2" fill="none" />
+            <rect x="117" y="45" width="36" height="98" fill="#bae6fd" />
+            <circle cx="135" cy="140" r="4" fill="#ef4444" />
+            <text x="125" y="160" fill="#ef4444" fontSize="11" fontWeight="bold">B (Max P)</text>
+            <text x="115" y="30" fill="#0369a1" fontSize="10" fontWeight="bold">h = 10 cm</text>
+            <path d="M 210 60 L 210 90 L 195 145 L 255 145 L 240 90 L 240 60" stroke="#334155" strokeWidth="2" fill="none" />
+            <polygon points="212,85 197,143 253,143 238,85" fill="#bae6fd" />
+            <circle cx="225" cy="140" r="3.5" fill="#0284c7" />
+            <text x="221" y="160" fill="#0f172a" fontSize="11" fontWeight="bold">C</text>
+            <text x="210" y="55" fill="#64748b" fontSize="9">h = 6 cm</text>
+          </svg>
+          <span className="text-[11px] text-slate-500 font-semibold mt-1">
+            Figure: Hydrostatic Pressure P = ρgh Highest at Greatest Depth (B)
+          </span>
+        </div>
+      );
+
+    // 16i. Carbon Dioxide Cycle & Sinks (Chemistry 2018 Q12)
+    case 'chem-co2-cycle':
+      return (
+        <div className="my-3 p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col items-center">
+          <svg className="w-80 h-52 max-w-full" viewBox="0 0 320 190" fill="none">
+            <path d="M 120 30 Q 140 15 160 30 Q 180 15 200 30 Q 210 45 190 50 L 130 50 Z" fill="#e2e8f0" />
+            <text x="160" y="42" textAnchor="middle" fill="#475569" fontSize="10" fontWeight="bold">Atmospheric CO₂</text>
+            <rect x="20" y="115" width="45" height="22" rx="4" fill="#3b82f6" />
+            <circle cx="30" cy="137" r="6" fill="#1e293b" />
+            <circle cx="55" cy="137" r="6" fill="#1e293b" />
+            <path d="M 42 110 Q 50 80 120 45" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="3 3" />
+            <text x="42" y="160" textAnchor="middle" fill="#0f172a" fontSize="10" fontWeight="bold">A: Car (CO₂ Emits)</text>
+            <rect x="95" y="115" width="40" height="25" rx="5" fill="#f59e0b" />
+            <path d="M 115 110 Q 125 80 150 45" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="3 3" />
+            <text x="115" y="160" textAnchor="middle" fill="#0f172a" fontSize="10" fontWeight="bold">B: Cattle (CH₄/CO₂)</text>
+            <rect x="185" y="125" width="10" height="25" fill="#78350f" />
+            <circle cx="190" cy="110" r="22" fill="#16a34a" />
+            <path d="M 175 48 Q 185 80 190 90" stroke="#16a34a" strokeWidth="2.5" />
+            <polygon points="190,95 186,85 194,85" fill="#16a34a" />
+            <text x="190" y="160" textAnchor="middle" fill="#16a34a" fontSize="10" fontWeight="bold">C: Tree (Absorbs CO₂)</text>
+            <rect x="250" y="105" width="45" height="40" fill="#64748b" />
+            <rect x="275" y="80" width="12" height="25" fill="#475569" />
+            <path d="M 280 75 Q 260 55 200 45" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="3 3" />
+            <text x="272" y="160" textAnchor="middle" fill="#0f172a" fontSize="10" fontWeight="bold">D: Factory (Emits)</text>
+          </svg>
+          <span className="text-[11px] text-slate-500 font-semibold mt-1">
+            Figure: Carbon Sources (A, B, D) vs Carbon Sink C (Green Tree)
+          </span>
+        </div>
+      );
+
     // 17. Existing cases
     case 'mutation-dna':
       return (

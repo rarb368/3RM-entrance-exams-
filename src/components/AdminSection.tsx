@@ -158,7 +158,6 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
   // CSV Export
   const handleExportCSV = () => {
     if (students.length === 0) {
-      alert('No student records available to export.');
       return;
     }
 

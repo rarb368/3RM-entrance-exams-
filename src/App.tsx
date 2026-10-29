@@ -27,7 +27,7 @@ import { NotificationsModal, AdminNotice } from './components/NotificationsModal
 import { AiAssistantModal } from './components/AiAssistantModal';
 import { getQuestionsForExam, getQuestionsForUnit } from './data/allQuestions';
 import { SCHOOL_INFO } from './data/subjectConfig';
-import { BookOpen, GraduationCap, School, User, Sparkles } from 'lucide-react';
+import { BookOpen, GraduationCap, School, User, Sparkles, Globe, ExternalLink } from 'lucide-react';
 
 export default function App() {
   const [profile, setProfile] = useState<StudentProfile | null>(() =>
@@ -59,6 +59,7 @@ export default function App() {
 
   const [selectedSubject, setSelectedSubject] = useState<SubjectId>('biology');
   const [selectedYear, setSelectedYear] = useState<ExamYear | 'all'>('all');
+  const [emptyExamNotice, setEmptyExamNotice] = useState<string | null>(null);
 
   // Active exam state
   const [activeExamData, setActiveExamData] = useState<{
@@ -144,8 +145,13 @@ export default function App() {
       questions = getQuestionsForExam(params.subjectId, params.year);
     }
 
+    if (params.subjectId === 'maths_soc') {
+      setEmptyExamNotice('Rebira will add these Maths Social questions soon. Please explore Natural Science or other subjects in the meantime.');
+      return;
+    }
+
     if (questions.length === 0) {
-      alert('This examination paper is currently awaiting digitization. Please select another year or category.');
+      setEmptyExamNotice('This examination paper is currently awaiting digitization. Rebira is continuously updating questions for all subjects.');
       return;
     }
 
@@ -323,6 +329,25 @@ export default function App() {
         onMarkAllRead={handleMarkAllRead}
       />
 
+      {/* Notice Dialog for Upcoming Content (Maths Social / Digitization) */}
+      {emptyExamNotice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl p-5 max-w-md w-full shadow-2xl border border-slate-200 animate-scale-up text-center">
+            <div className="w-12 h-12 rounded-full bg-teal-50 text-[#00897b] flex items-center justify-center mx-auto mb-3">
+              <BookOpen className="w-6 h-6" />
+            </div>
+            <h3 className="font-bold text-slate-800 text-base mb-2">Notice from Rebira Sisay</h3>
+            <p className="text-sm text-slate-600 mb-5 leading-relaxed">{emptyExamNotice}</p>
+            <button
+              onClick={() => setEmptyExamNotice(null)}
+              className="w-full py-2.5 rounded-xl bg-[#00897b] hover:bg-[#00796b] text-white font-bold text-sm transition cursor-pointer shadow-sm"
+            >
+              Understand & Continue
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Fixed Bottom Navigation: exactly HOME | CONTACT US */}
       {currentView !== 'exam' && (
         <BottomNav
@@ -401,6 +426,21 @@ export default function App() {
                 <span>Contact Developer & School</span>
               </button>
 
+              {/* School Platform Link */}
+              <a
+                href="https://aibsbss.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setIsMenuDrawerOpen(false)}
+                className="w-full p-3 rounded-xl hover:bg-emerald-50 text-emerald-950 flex items-center justify-between font-semibold transition cursor-pointer text-left border border-emerald-100/90 bg-emerald-50/40"
+              >
+                <div className="flex items-center gap-3">
+                  <Globe className="w-5 h-5 text-[#00897b]" />
+                  <span>AIBSBSS School Platform</span>
+                </div>
+                <ExternalLink className="w-4 h-4 text-[#00897b]" />
+              </a>
+
               {/* Join Us on Telegram (Replaced Admin Console as requested) */}
               <a
                 href="https://t.me/rebiraentranceexam"
@@ -416,6 +456,7 @@ export default function App() {
               <div className="pt-4 border-t my-4 text-xs text-slate-500 space-y-2">
                 <div className="font-bold text-slate-700">Platform Credentials:</div>
                 <div>Developer: <strong>{SCHOOL_INFO.developer}</strong></div>
+                <div>School Platform: <a href="https://aibsbss.vercel.app/" target="_blank" rel="noopener noreferrer" className="text-teal-700 underline font-semibold">aibsbss.vercel.app</a></div>
                 <div>Email: <a href={`mailto:${SCHOOL_INFO.contactEmail}`} className="text-teal-700 underline">{SCHOOL_INFO.contactEmail}</a></div>
                 <div>Telegram: <a href="https://t.me/rebiraentranceexam" target="_blank" rel="noopener noreferrer" className="text-teal-700 underline">@rebiraentranceexam</a></div>
                 <div>School: {SCHOOL_INFO.fullName}</div>

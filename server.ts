@@ -123,6 +123,14 @@ const DEFAULT_STUDENTS: DatabaseSchema['students'] = {
     grade: 'Grade 12',
     registeredAt: '2026-10-28T07:10:00.000Z',
   },
+  'kenenisa@aibsbss.edu.et': {
+    fullName: 'Kenenisa Bekele',
+    phoneNumber: '+251977889900',
+    email: 'kenenisa@aibsbss.edu.et',
+    school: 'Ambo Ifa Boru Special Boarding Secondary School',
+    grade: 'Grade 12',
+    registeredAt: '2026-10-28T23:12:42.415Z',
+  },
 };
 
 const DEFAULT_ATTEMPTS = [
@@ -213,10 +221,25 @@ function readDatabase(): DatabaseSchema {
 
 function writeDatabase(data: DatabaseSchema): void {
   try {
-    const mergedStudents = { ...DEFAULT_STUDENTS, ...data.students };
+    let existingDiskStudents: DatabaseSchema['students'] = {};
+    let existingDiskAttempts: any[] = [];
+    if (fs.existsSync(DB_FILE)) {
+      try {
+        const raw = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
+        if (raw.students) existingDiskStudents = raw.students;
+        if (Array.isArray(raw.attempts)) existingDiskAttempts = raw.attempts;
+      } catch {}
+    }
+    const mergedStudents = { ...DEFAULT_STUDENTS, ...existingDiskStudents, ...data.students };
+    const attemptMap = new Map<string, any>();
+    DEFAULT_ATTEMPTS.forEach((att) => attemptMap.set(att.id, att));
+    existingDiskAttempts.forEach((att) => attemptMap.set(att.id, att));
+    (data.attempts || []).forEach((att) => attemptMap.set(att.id, att));
+
     const toWrite = {
       ...data,
       students: mergedStudents,
+      attempts: Array.from(attemptMap.values()),
     };
     fs.writeFileSync(DB_FILE, JSON.stringify(toWrite, null, 2), 'utf-8');
   } catch (e) {

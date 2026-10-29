@@ -49,13 +49,10 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
         setCopiedToast(true);
         setTimeout(() => setCopiedToast(false), 2500);
       } catch {
-        alert('Share link: ' + window.location.href);
+        setCopiedToast(true);
+        setTimeout(() => setCopiedToast(false), 2500);
       }
     }
-  };
-
-  const handleTelegramClick = () => {
-    window.open('https://t.me/rebiraentranceexam', '_blank');
   };
 
   return (
@@ -89,15 +86,17 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
         {/* Right Action Icons: Telegram, Notification Bell (if new from admin), Share, Profile */}
         <div className="flex items-center gap-1 sm:gap-2">
           {/* Real Telegram Community Button */}
-          <button
-            onClick={handleTelegramClick}
+          <a
+            href="https://t.me/rebiraentranceexam"
+            target="_blank"
+            rel="noopener noreferrer"
             title="Join Telegram Community"
             aria-label="Join Telegram"
             className="p-1.5 rounded-lg text-sky-200 hover:text-white hover:bg-white/15 transition active:scale-95 cursor-pointer flex items-center gap-1.5"
           >
             <RealTelegramIcon className="w-5 h-5 text-[#229ED9]" />
             <span className="hidden md:inline text-xs font-semibold">Telegram</span>
-          </button>
+          </a>
 
           {/* Admin Notification Bell: Visible only/alerting when admin sent notification */}
           <button
