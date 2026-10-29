@@ -59,7 +59,7 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
       "Thefeartocondemnthegovernmentfortheproblem"
     ],
     "correctAnswer": 1,
-    "explanation": "\"I would rather report otherwise\" (Paragraph 3) expresses the writer\u2019s reluctance to admitanuncomfortabletruth:manyhomelesschoosetheirlifestyle.Itimpliesfearof revealing this unpopular cause (B). It does not relate to explaining troubles (C), condemning government(D),orinformingthepublic(A)."
+    "explanation": "\"I would rather report otherwise\" (Paragraph 3) expresses the writer’s reluctance to admitanuncomfortabletruth:manyhomelesschoosetheirlifestyle.Itimpliesfearof revealing this unpopular cause (B). It does not relate to explaining troubles (C), condemning government(D),orinformingthepublic(A)."
   },
   {
     "id": "eng-2017-04",
@@ -97,7 +97,7 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
       "apersonwholookssuspicious"
     ],
     "correctAnswer": 3,
-    "explanation": "\"Haggard\" (Paragraph 1) describes someone appearing exhausted, disheveled, or unwell\u2014oftenperceivedassuspiciousoruntrustworthy.OptionsA(trustful)andB (criminal) are incorrect. Option C (homeless) is circular and not a definition."
+    "explanation": "\"Haggard\" (Paragraph 1) describes someone appearing exhausted, disheveled, or unwell—oftenperceivedassuspiciousoruntrustworthy.OptionsA(trustful)andB (criminal) are incorrect. Option C (homeless) is circular and not a definition."
   },
   {
     "id": "eng-2017-06",
@@ -344,7 +344,7 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
       "theforest areas"
     ],
     "correctAnswer": 0,
-    "explanation": "Thesentencereads:\"The preservation of forest areas, wildlife and soil... since its neglect means...\" \"Its\" refers to the noun phrase \"preservation of forest areas, wildlife andsoil,\" which collectively constitute \"natural resources.\" Options B, C, and D are incomplete (B is an outcome, C/D are subsets of the resources). SectionThreeVocabulary A. Completion Instructions: Questions from 19 - 24 are incomplete sentences. There are four alternative wordsorphrases,A-D,givenbeloweachquestion.Choosethewordorphrasethatbest completesthesentenceandblackentheletterofyourchoiceontheseparateanswersheet provided."
+    "explanation": "Thesentencereads:\"The preservation of forest areas, wildlife and soil... since its neglect means...\" \"Its\" refers to the noun phrase \"preservation of forest areas, wildlife andsoil,\" which collectively constitute \"natural resources.\" Options B, C, and D are incomplete (B is an outcome, C/D are subsets of the resources)."
   },
   {
     "id": "eng-2017-19",
@@ -610,7 +610,7 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
       "Utensil"
     ],
     "correctAnswer": 2,
-    "explanation": "A bed is used for sleeping. A stove is used for cooking. \"Cook\" (verb) matches the function-based relationship. \"Utensil\" (noun) is a tool, not an action, while \"clean\" or \"wash\" are unrelated functions. SectionFour:SentenceComprehension Instructions: For questions 33 and 34, choose the sentence with the closest meaning to the headsentencefromthefouralternativesgiven,andblackentheletterofyourchoiceonthe separate answersheetprovided."
+    "explanation": "A bed is used for sleeping. A stove is used for cooking. \"Cook\" (verb) matches the function-based relationship. \"Utensil\" (noun) is a tool, not an action, while \"clean\" or \"wash\" are unrelated functions."
   },
   {
     "id": "eng-2017-33",
@@ -648,7 +648,7 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
       "Joining Addis Ababa University has now becomeeasy."
     ],
     "correctAnswer": 0,
-    "explanation": "Theheadsentencefocusesonachangeinadmissionpolicy.OptionAdirectly reflects this by mentioning \"new rules and regulations.\" Options B, C, and D introduce unrelated ideas. II. LANGUAGEFOCUS Directions: Questions from 35-62 are incomplete sentences. Choose the word or phrase that bestcompletesthesentenceaccurately andblackentheletterofyourchoiceontheseparate answersheetprovided."
+    "explanation": "Theheadsentencefocusesonachangeinadmissionpolicy.OptionAdirectly reflects this by mentioning \"new rules and regulations.\" Options B, C, and D introduce unrelated ideas."
   },
   {
     "id": "eng-2017-35",
@@ -735,7 +735,7 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
     "topic": "Tenses, Quantifiers & Relative Clauses",
     "year": "2017",
     "questionNumber": 39,
-    "question": "__________Idonotcomplainmuch;myfriendsoftentakemeforafool.",
+    "question": "__________ I do not complain much, my friends often take me for a fool.",
     "options": [
       "As a result of",
       "Because of",
@@ -743,7 +743,7 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
       "Because"
     ],
     "correctAnswer": 3,
-    "explanation": "\"In spite of\" introduces contrast: despite not complaining, friends mistake the speakerforafool.Otheroptionsimplycausation,notcontrast."
+    "explanation": "\"Because\" is a subordinating conjunction introducing a complete cause/reason clause (\"I do not complain much\"). Other options like \"In spite of\" or \"Because of\" are prepositions and must be followed by a noun phrase or gerund, not an independent clause with subject and verb."
   },
   {
     "id": "eng-2017-40",
@@ -1180,7 +1180,7 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
       "exactly"
     ],
     "correctAnswer": 2,
-    "explanation": "\"Scarcely\" (hardly any) indicates a near-total lack of time due to busyness. Other options are positive and contradict the context. III. WRITING Directions: Questions from 63-80 are related to different types of writing. Read each of them verycarefully and choose the best answer from the given alternatives. Then, blacken the letter of your choice on the separate answer sheet provided. SectionOne:WordSpelling Instructions: Questions 63 and 64 are on word spelling. From the alternatives A-D, choose the onewhichiscorrectlyspeltandblackentheletterofyourchoiceontheseparateanswersheet provided."
+    "explanation": "\"Scarcely\" (hardly any) indicates a near-total lack of time due to busyness. Other options are positive and contradict the context."
   },
   {
     "id": "eng-2017-63",
@@ -1191,7 +1191,7 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
     "topic": "Prepositions & Connectors",
     "year": "2017",
     "questionNumber": 63,
-    "question": "",
+    "question": "Which one of the following words is correctly spelt?",
     "options": [
       "expenditure",
       "traditionial",
@@ -1199,7 +1199,7 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
       "fotograph"
     ],
     "correctAnswer": 0,
-    "explanation": "Verified answer based on Ethiopian National Examination key."
+    "explanation": "\"Expenditure\" is correctly spelt. The other words are misspelled: traditional (not traditionial), particularly (not particularily), and photograph (not fotograph)."
   },
   {
     "id": "eng-2017-64",
@@ -1210,15 +1210,15 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
     "topic": "Prepositions & Connectors",
     "year": "2017",
     "questionNumber": 64,
-    "question": "",
+    "question": "Which one of the following words is correctly spelt?",
     "options": [
       "paralism",
       "suffication",
       "inteligibility",
       "repetition"
     ],
-    "correctAnswer": 2,
-    "explanation": "Verified answer based on Ethiopian National Examination key."
+    "correctAnswer": 3,
+    "explanation": "\"Repetition\" is correctly spelt. The other alternatives are misspelled: parallelism (not paralism), suffocation (not suffication), and intelligibility with double \"l\" (not inteligibility)."
   },
   {
     "id": "eng-2017-65",
@@ -1229,15 +1229,15 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
     "topic": "Prepositions & Connectors",
     "year": "2017",
     "questionNumber": 65,
-    "question": "",
+    "question": "Which one of the following sentences has the correct punctuation and capitalization?",
     "options": [
       "Tadesse and Fanuel are good friends. They study their lessons together and help each other.",
-      "Tadesse andFanuelare goodfriends;Theystudytheir lessons togetherandhelpeachother.",
+      "Tadesse and Fanuel are good friends; They study their lessons together and help each other.",
       "Tadesse and Fanuel are good friends, they study their lessons together and help each other.",
-      "TadesseandFanuelaregoodfriendsTheystudytheirlessonstogetherandhelpeachother!"
+      "Tadesse and Fanuel are good friends They study their lessons together and help each other!"
     ],
     "correctAnswer": 0,
-    "explanation": "A: Correct. Two independentsentencesseparatedbyaperiod;capitalization is proper. B: Incorrect. Semicolon misuse; \"They\" should not be capitalized after a semicolon. C: Incorrect. Comma splice (comma cannot join two independentclauses). D: Incorrect. Run-on sentence (no punctuation between clauses); exclamation mark is inappropriate."
+    "explanation": "Option A is correct: two complete sentences separated by a period with proper capitalization. Option B incorrectly capitalizes \"They\" after a semicolon. Option C is a comma splice, and Option D is a run-on sentence without punctuation."
   },
   {
     "id": "eng-2017-66",
@@ -1248,15 +1248,15 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
     "topic": "Paragraph Flow & Sentence Sequence",
     "year": "2017",
     "questionNumber": 66,
-    "question": "",
+    "question": "Which one of the following sentences has the correct punctuation?",
     "options": [
       "Ethiopia is a rich country endowed with many natural resources. In addition it has many diversified cultures and very friendly people.",
       "Ethiopia is a rich country endowed with many natural resources. In addition, it has many diversified cultures and very friendly people",
-      "Ethiopia is a rich country endowed with many natural resources. In addition it has many diversified cultures and very friendly people.",
-      "Ethiopiaisa rich country endowed with manynaturalresources. In addition, it has many diversified cultures and very friendly people."
+      "Ethiopia is a rich country endowed with many natural resources, in addition it has many diversified cultures and very friendly people.",
+      "Ethiopia is a rich country endowed with many natural resources. In addition, it has many diversified cultures and very friendly people."
     ],
     "correctAnswer": 3,
-    "explanation": "D: Correct. Commaafterintroductoryphrase\"In addition\"; period ends the sentence. A/C: Missing commaafter\"In addition.\" B: Missing period at the end."
+    "explanation": "Option D is correct: introductory transitional phrase \"In addition\" is properly followed by a comma, and the sentence ends with a period."
   },
   {
     "id": "eng-2017-67",
@@ -1267,15 +1267,15 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
     "topic": "Paragraph Flow & Sentence Sequence",
     "year": "2017",
     "questionNumber": 67,
-    "question": "",
+    "question": "Which one of the following sentences has the correct punctuation marks?",
     "options": [
       "Hello Kenyan National Hotel, can I help you?",
       "Hello, Kenyan National Hotel. can I help you?",
       "Hello Kenyan National Hotel. Can I help you?",
-      "Hello, Kenyan NationalHotel! Can I help you?"
+      "Hello, Kenyan National Hotel! Can I help you?"
     ],
     "correctAnswer": 3,
-    "explanation": "D: Correct. Commaafter\"Hello\"; exclamation for emphasis; \"Can\" capitalized. A: Missing commaafter\"Hello\";\"can\" should becapitalized. B: Period after \"Hotel\" should be a comma/exclamation; \"can\" not capitalized. C: Missing comma after \"Hello.\" SectionThree: JumbledWords Instructions: The words in the questions 68-70 are NOT in the right order. When put in the right order, they make correct English sentences. From the given alternatives A - D, choose the correct answer and blackenthe letter of your choice on the separate answer sheet provided."
+    "explanation": "Option D is correct: \"Hello,\" is set off with a comma, followed by an exclamation mark, and the question starts with a capitalized \"Can I help you?\"."
   },
   {
     "id": "eng-2017-68",
@@ -1348,10 +1348,10 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
       "a d c b",
       "b a d c",
       "c b a d",
-      "dcda"
+      "d a c b"
     ],
     "correctAnswer": 3,
-    "explanation": "Logical flow: (d) Introduces farming types. (a) Defines arable farming. (c) Introduces pastoral farming. (b) Defines pastoral farming. Order:d\u2192a\u2192c\u2192b."
+    "explanation": "Logical paragraph flow: (d) Introduces farming types. (a) Defines arable farming. (c) Introduces pastoral farming. (b) Defines pastoral farming. Correct order: d - a - c - b."
   },
   {
     "id": "eng-2017-72",
@@ -1370,7 +1370,7 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
       "dacb"
     ],
     "correctAnswer": 0,
-    "explanation": "Logical flow: o (a) General introduction to Hanna. o (d) Starts physical description (\"To begin with\"). o (c) Continues description (clothing/age). o (b) Concludes with job (\"Finally\"). Order:a\u2192d\u2192c\u2192b."
+    "explanation": "Logical flow: o (a) General introduction to Hanna. o (d) Starts physical description (\"To begin with\"). o (c) Continues description (clothing/age). o (b) Concludes with job (\"Finally\"). Order:a→d→c→b."
   },
   {
     "id": "eng-2017-73",
@@ -1389,7 +1389,7 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
       "cbad"
     ],
     "correctAnswer": 1,
-    "explanation": "Logical flow: o (a) Presents viewpoint 1 (education = success). o (c) Supports viewpoint 1 (examples of rich educated people). o (b) Supports viewpoint 1 (counterargument:struggling intellectuals). o (d) Presents opposing viewpoint (education = poverty). Order:a\u2192c\u2192b\u2192d."
+    "explanation": "Logical flow: o (a) Presents viewpoint 1 (education = success). o (c) Supports viewpoint 1 (examples of rich educated people). o (b) Supports viewpoint 1 (counterargument:struggling intellectuals). o (d) Presents opposing viewpoint (education = poverty). Order:a→c→b→d."
   },
   {
     "id": "eng-2017-74",
@@ -1400,15 +1400,15 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
     "topic": "Jumbled Sentence Rearrangement",
     "year": "2017",
     "questionNumber": 74,
-    "question": "",
+    "question": "When you put the following sentences (a - d) in the correct order to make a complete paragraph, which sequence is correct?\n\na. Three of their children are girls.\nb. His wife, Woizero Mulu, is younger than him by 2 years.\nc. Ato Lemma and Woizero Mulu have four children.\nd. Ato Lemma is a thirty-year-old person in my community.",
     "options": [
-      "Three of their children are girls.",
-      "His wife wizero Mulu, is younger than him by 2 years.",
-      "Ato LemmaandWiroMuluhavefourchildren.",
-      "AtoLemmaisathirty-year-oldpersoninmycommunity. A. c b d a B. d b c a C. a c d b D. dcab"
+      "c - b - d - a",
+      "d - b - c - a",
+      "a - c - d - b",
+      "d - c - a - b"
     ],
     "correctAnswer": 1,
-    "explanation": "\u201cAtoLemmaisathirty-year-oldpersoninmycommunity.HiswifewizeroMulu,is youngerthanhimby2years.AtoLemmaandWiroMuluhavefourchildren.Threeoftheir children are girls. WhyOtherOptionsFail: \uf0b7 A. c b d a: Starts with \"they have children\" (C) before introducing who \"they\" are, causing confusion. \uf0b7 C. a c d b: Begins with \"their children\" (A) without establishing who \"they\" are. \uf0b7 D.dcab:Introduceschildren(C)beforementioningthewife(B),making\"their\"in(A) ambiguous. SectionFive: Types of Paragraph Writing Instructions: Questions 75-77 are related to types of paragraph writing. From the alternatives A-Dgivenineachquestion,choosethecorrectanswerandblackentheletterofyourchoiceon theseparateanswersheetprovided."
+    "explanation": "The logical order is d - b - c - a: Sentence (d) introduces Ato Lemma, (b) introduces his wife Woizero Mulu, (c) introduces their four children, and (a) elaborates that three of their children are girls."
   },
   {
     "id": "eng-2017-75",
@@ -1419,7 +1419,7 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
     "topic": "Jumbled Sentence Rearrangement",
     "year": "2017",
     "questionNumber": 75,
-    "question": "\u201cFirst of all, the death penalty should be only resort to killing people and spend the rest of their lives in jail. Moreover, if the death penalty committed against them would like to take revengeonthecriminalandthismakeschaosinsociety\".Thisiswhatparagraphwritingthatis mostlikely:",
+    "question": "“First of all, the death penalty should be only resort to killing people and spend the rest of their lives in jail. Moreover, if the death penalty committed against them would like to take revengeonthecriminalandthismakeschaosinsociety\".Thisiswhatparagraphwritingthatis mostlikely:",
     "options": [
       "argumentative",
       "expository",
@@ -1465,7 +1465,7 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
       "Narrative"
     ],
     "correctAnswer": 0,
-    "explanation": "Theparagraphdescribes Eden'sphysicaltraits andpersonality (height, weight, politeness). SectionTwo:LetterWriting Instructions: Questions 78-80 are about letter writing. The letter below has three parts and all of themcarefully follows the next answer and blacken the letter of your choice on the separate answersheetprovided. (1) Dear sir, (2) I am a polytechnic graduate. I have a Diploma in Auto mechanics from Bahir Dar Polytechnic College. I have worked as a mechanic in Bahir Dar Textile Factory for two years. I am now applying for the post of mechanic advertised in your company. For your reference, I have attachedmyCVwiththisapplication. (3) I am looking forward to hearing from you. Sincerely,Dewit Hibru"
+    "explanation": "Theparagraphdescribes Eden'sphysicaltraits andpersonality (height, weight, politeness). (1) Dear sir, (2) I am a polytechnic graduate. I have a Diploma in Auto mechanics from Bahir Dar Polytechnic College. I have worked as a mechanic in Bahir Dar Textile Factory for two years. I am now applying for the post of mechanic advertised in your company. For your reference, I have attachedmyCVwiththisapplication. (3) I am looking forward to hearing from you. Sincerely,Dewit Hibru"
   },
   {
     "id": "eng-2017-78",
@@ -1522,7 +1522,7 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
       "subject"
     ],
     "correctAnswer": 1,
-    "explanation": "\"Dear sir,\" is the greeting addressing the recipient. IV.COMMUNICATIVEACTIVITIES Directions: Questions from 81-100 are presented in the form of conversations. The part said by oneofthespeakersisgiven,andablankspaceisleftfortheother.Choosethealternativethat is most appropriate to complete the dialogue and blacken the letter of your choice on the separate answersheetprovided."
+    "explanation": "\"Dear sir,\" is the greeting addressing the recipient."
   },
   {
     "id": "eng-2017-81",
@@ -1560,7 +1560,7 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
       "Youcouldlearnactiveandpassivevoices."
     ],
     "correctAnswer": 1,
-    "explanation": "Theteacher confirmsthetopicwill be covered tomorrow. OptionB asks about timing, aligning with the response. Options A, C, and D either request immediate explanation, ask about knowledge,or state an opinion\u2014none matchtheteacher'sanswer."
+    "explanation": "Theteacher confirmsthetopicwill be covered tomorrow. OptionB asks about timing, aligning with the response. Options A, C, and D either request immediate explanation, ask about knowledge,or state an opinion—none matchtheteacher'sanswer."
   },
   {
     "id": "eng-2017-83",
@@ -1573,7 +1573,7 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
     "questionNumber": 83,
     "question": "Friend: What do you think unemployment will be like in the future? You:_______________________",
     "options": [
-      "I am sure today\u2019s children won\u2019t expect a job from the government",
+      "I am sure today’s children won’t expect a job from the government",
       "In my opinion, none of a working age will be unemployed",
       "I think unemployment is a universal problem these days",
       "Thinkabouttoday;tomorrowisanotherday"
@@ -1655,7 +1655,7 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
       "themainpointistheydonotreadallthatcomestheirway"
     ],
     "correctAnswer": 1,
-    "explanation": "Thefather agrees (\"Yes\") but adds a drawback (\"but...\"). Option B criticizes youths' lack of discernment, balancing the neighbor\u2019s praise. Options A, C, and D are irrelevant or positive."
+    "explanation": "Thefather agrees (\"Yes\") but adds a drawback (\"but...\"). Option B criticizes youths' lack of discernment, balancing the neighbor’s praise. Options A, C, and D are irrelevant or positive."
   },
   {
     "id": "eng-2017-88",
@@ -1883,7 +1883,7 @@ export const ENGLISH_2017_QUESTIONS: Question[] = [
       "DidIsteponyourfoot?"
     ],
     "correctAnswer": 2,
-    "explanation": "Thefriend apologizes for an accident (stepping on a foot) and explains (\"blind in thedark\"). Option C is a direct apology. \"Don\u2019t worry\" accepts this. Options A, B, and D are less natural for minor accidents."
+    "explanation": "Thefriend apologizes for an accident (stepping on a foot) and explains (\"blind in thedark\"). Option C is a direct apology. \"Don’t worry\" accepts this. Options A, B, and D are less natural for minor accidents."
   },
   {
     "id": "eng-2017-100",

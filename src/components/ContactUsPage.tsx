@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Send, MessageSquare, AlertCircle, Sparkles, School, Check } from 'lucide-react';
+import { Mail, Send, MessageSquare, AlertCircle, Sparkles, School, Check, Globe, ExternalLink } from 'lucide-react';
 import { SCHOOL_INFO } from '../data/subjectConfig';
 
 export const ContactUsPage: React.FC = () => {
@@ -28,6 +28,41 @@ export const ContactUsPage: React.FC = () => {
 
   return (
     <div className="pb-24 pt-4 px-4 max-w-2xl mx-auto">
+      {/* Official AIBSBSS School Platform Card - Direct Touch to Open */}
+      <a
+        href="https://aibsbss.vercel.app/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block mb-6 bg-gradient-to-r from-teal-700 via-teal-800 to-teal-900 hover:from-teal-800 hover:to-teal-950 text-white rounded-3xl p-5 sm:p-6 shadow-md hover:shadow-xl transition-all active:scale-[0.99] border-2 border-teal-500/40 group cursor-pointer"
+      >
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-13 h-13 rounded-2xl bg-white/15 backdrop-blur-xs flex items-center justify-center shadow-inner shrink-0 group-hover:scale-105 transition-transform text-amber-300">
+              <Globe className="w-7 h-7" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-sm sm:text-base tracking-wide truncate">
+                  AIBSBSS School Platform
+                </h3>
+                <span className="bg-emerald-400 text-teal-950 text-[10px] font-black px-2 py-0.5 rounded-full shrink-0">
+                  VISIT NOW
+                </span>
+              </div>
+              <p className="text-teal-200 text-xs font-mono mt-0.5 truncate">
+                https://aibsbss.vercel.app/
+              </p>
+              <p className="text-[11px] text-teal-100/90 font-medium mt-1">
+                Touch here to open the official school portal & student platform →
+              </p>
+            </div>
+          </div>
+          <div className="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center shrink-0 group-hover:bg-white group-hover:text-teal-900 transition-colors">
+            <ExternalLink className="w-5 h-5" />
+          </div>
+        </div>
+      </a>
+
       {/* School & Developer Card */}
       <div className="bg-gradient-to-br from-teal-800 to-teal-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg mb-6 border border-teal-700 relative overflow-hidden">
         <div className="relative z-10 text-center">
