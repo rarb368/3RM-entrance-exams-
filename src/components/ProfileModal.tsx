@@ -144,7 +144,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full text-xs p-2 rounded-lg border border-slate-300 outline-none focus:border-teal-600"
+                    placeholder="Rebira Sisay"
+                    className="w-full text-xs p-2 rounded-lg border border-slate-300 placeholder:text-slate-400 outline-none focus:border-teal-600"
                   />
                 </div>
                 <div>
@@ -155,8 +156,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     type="text"
                     value={school}
                     onChange={(e) => setSchool(e.target.value)}
-                    placeholder="Enter your school name"
-                    className="w-full text-xs p-2 rounded-lg border border-slate-300 outline-none focus:border-teal-600"
+                    placeholder="Ambo Ifa Boru"
+                    className="w-full text-xs p-2 rounded-lg border border-slate-300 placeholder:text-slate-400 outline-none focus:border-teal-600"
                   />
                 </div>
                 <div>
@@ -167,7 +168,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     type="tel"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="w-full text-xs p-2 rounded-lg border border-slate-300 outline-none focus:border-teal-600"
+                    placeholder="0911223344"
+                    className="w-full text-xs p-2 rounded-lg border border-slate-300 placeholder:text-slate-400 outline-none focus:border-teal-600"
                   />
                 </div>
                 <div>
@@ -178,7 +180,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full text-xs p-2 rounded-lg border border-slate-300 outline-none focus:border-teal-600"
+                    placeholder="youremail@gmail.com"
+                    className="w-full text-xs p-2 rounded-lg border border-slate-300 placeholder:text-slate-400 outline-none focus:border-teal-600"
                   />
                 </div>
                 <div>
