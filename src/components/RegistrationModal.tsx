@@ -10,11 +10,14 @@ interface RegistrationModalProps {
 }
 
 export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, onRegistered }) => {
-  const [fullName, setFullName] = useState('');
-  const [schoolName, setSchoolName] = useState('Ambo Ifa Boru Special Boarding Secondary School (AIBSBSS)');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [email, setEmail] = useState('');
-  const [grade, setGrade] = useState('12');
+  const existingProfile = StorageService.getProfile();
+  const [fullName, setFullName] = useState(existingProfile?.fullName || '');
+  const [schoolName, setSchoolName] = useState(existingProfile?.school || '');
+  const [phoneNumber, setPhoneNumber] = useState(existingProfile?.phoneNumber || '');
+  const [email, setEmail] = useState(existingProfile?.email || '');
+  const [grade, setGrade] = useState(
+    existingProfile?.grade ? existingProfile.grade.replace(/[^0-9]/g, '') : '12'
+  );
   const [errors, setErrors] = useState<{ fullName?: string; schoolName?: string; phoneNumber?: string; email?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -40,7 +43,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
     if (!email.trim()) {
       errs.email = 'Gmail address is required';
     } else if (!isValidGmailOrEmail(email)) {
-      errs.email = 'Enter a valid email address (e.g. student@gmail.com)';
+      errs.email = 'Enter a valid email address (e.g. yourname@gmail.com)';
     }
 
     setErrors(errs);
@@ -80,21 +83,24 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
             {SCHOOL_INFO.examName}
           </h1>
           <p className="text-teal-100 text-xs mt-1 font-medium">
-            Ambo Ifa Boru Special Boarding Secondary School (AIBSBSS)
+            Ethiopian University Entrance Examination Preparation Portal
           </p>
           <div className="mt-2 text-[11px] text-teal-200/90 flex items-center justify-center gap-1.5">
-            <span>Dev: {SCHOOL_INFO.developer}</span>
-            <span>•</span>
-            <span>{SCHOOL_INFO.contactEmail}</span>
+            <span>Student Registration</span>
           </div>
         </div>
 
         {/* Welcome Message */}
         <div className="p-6">
-          <div className="mb-5 bg-teal-50 border border-teal-100 rounded-xl p-3.5 flex items-start gap-3">
+          <div className="mb-5 bg-teal-50 border border-teal-200/80 rounded-xl p-3.5 flex items-start gap-3">
             <BookOpen className="w-5 h-5 text-teal-700 shrink-0 mt-0.5" />
             <div className="text-xs text-teal-900 leading-relaxed">
-              <span className="font-semibold text-teal-950">Welcome to realistic EUEE practice!</span> Prepare for the Ethiopian University Entrance Examination with verified previous national questions, accurate timers, curriculum units, and step-by-step explanations.
+              <span className="font-bold text-teal-950">
+                {existingProfile ? 'Official Student Profile Verification' : 'Welcome to realistic EUEE practice!'}
+              </span>{' '}
+              {existingProfile
+                ? 'Please confirm your registration to ensure your student profile is permanently saved on the central school database. Once registered, you will directly enter the app with complete access.'
+                : 'Prepare for the Ethiopian University Entrance Examination with authentic previous national questions, accurate timers, curriculum units, and step-by-step explanations. Fill in your details to register.'}
             </div>
           </div>
 
@@ -136,7 +142,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({ isOpen, on
                     setSchoolName(e.target.value);
                     if (errors.schoolName) setErrors({ ...errors, schoolName: undefined });
                   }}
-                  placeholder="e.g. Ambo Ifa Boru Special Boarding Secondary School"
+                  placeholder="Write your school name..."
                   className={`w-full rounded-lg border px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:ring-2 ${
                     errors.schoolName
                       ? 'border-rose-400 focus:ring-rose-200'

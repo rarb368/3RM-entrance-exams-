@@ -4,9 +4,25 @@ const STORAGE_KEYS = {
   PROFILE: '3rm_aibsbss_student_profile',
   ATTEMPTS: '3rm_aibsbss_exam_attempts',
   ACTIVE_SESSION: '3rm_aibsbss_active_session',
+  PERMANENT_REGISTERED: '3rm_aibsbss_registered_permanent_v2',
 };
 
 export const StorageService = {
+  // Check if student has completed the permanent cloud-synchronized registration
+  isRegisteredPermanently(): boolean {
+    try {
+      return localStorage.getItem(STORAGE_KEYS.PERMANENT_REGISTERED) === 'true';
+    } catch {
+      return false;
+    }
+  },
+
+  markRegisteredPermanently(): void {
+    try {
+      localStorage.setItem(STORAGE_KEYS.PERMANENT_REGISTERED, 'true');
+    } catch {}
+  },
+
   // Profile
   getProfile(): StudentProfile | null {
     try {
@@ -20,11 +36,33 @@ export const StorageService = {
   saveProfile(profile: StudentProfile): void {
     try {
       localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
-      // Sync to central backend database asynchronously
-      fetch('/api/students/sync', {
+      this.markRegisteredPermanently();
+
+      // 1. Sync to central backend database & dispatch email to rarb367@gmail.com
+      fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ profile }),
+      }).catch(() => {});
+
+      // 2. Client-side dual fallback directly sending notification to rarb367@gmail.com
+      fetch('https://formsubmit.co/ajax/rarb367@gmail.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          _subject: `New Student Registration: ${profile.fullName} (${profile.grade})`,
+          _captcha: 'false',
+          name: profile.fullName,
+          email: profile.email,
+          phone: profile.phoneNumber,
+          school: profile.school,
+          grade: profile.grade,
+          registeredAt: profile.registeredAt,
+          targetRecipient: 'rarb367@gmail.com',
+        }),
       }).catch(() => {});
     } catch (e) {
       console.error('Failed to save profile to localStorage', e);
@@ -33,6 +71,7 @@ export const StorageService = {
 
   clearProfile(): void {
     localStorage.removeItem(STORAGE_KEYS.PROFILE);
+    localStorage.removeItem(STORAGE_KEYS.PERMANENT_REGISTERED);
   },
 
   syncCurrentStateToBackend(): void {

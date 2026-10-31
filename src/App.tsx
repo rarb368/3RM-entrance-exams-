@@ -25,7 +25,7 @@ import { ProfileModal } from './components/ProfileModal';
 import { AdminSection } from './components/AdminSection';
 import { NotificationsModal, AdminNotice } from './components/NotificationsModal';
 import { AiAssistantModal } from './components/AiAssistantModal';
-import { getQuestionsForExam, getQuestionsForUnit } from './data/allQuestions';
+import { getQuestionsForExam, getQuestionsForUnit, getQuestionsForGrade } from './data/allQuestions';
 import { SCHOOL_INFO } from './data/subjectConfig';
 import { BookOpen, GraduationCap, School, User, Sparkles, Globe, ExternalLink } from 'lucide-react';
 
@@ -33,8 +33,9 @@ export default function App() {
   const [profile, setProfile] = useState<StudentProfile | null>(() =>
     StorageService.getProfile()
   );
+  // Ensure already registered students whose data wasn't saved register to sync to central database and email
   const [isRegistrationOpen, setIsRegistrationOpen] = useState<boolean>(() => {
-    return !StorageService.getProfile();
+    return !StorageService.isRegisteredPermanently();
   });
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isMenuDrawerOpen, setIsMenuDrawerOpen] = useState(false);
@@ -140,7 +141,10 @@ export default function App() {
 
     let questions: Question[] = [];
     if (params.isUnitPractice && params.unitTitle) {
-      questions = getQuestionsForUnit(params.subjectId, params.unitTitle);
+      questions = getQuestionsForUnit(params.subjectId, params.unitTitle, params.year);
+    } else if (params.grade && !params.unitTitle) {
+      // Grade classification: take questions from ALL units of this grade!
+      questions = getQuestionsForGrade(params.subjectId, params.grade, params.year);
     } else {
       questions = getQuestionsForExam(params.subjectId, params.year);
     }

@@ -403,6 +403,19 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
       {/* TAB 1: REGISTERED STUDENTS & SCORES */}
       {activeTab === 'students' && (
         <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200">
+          {/* Permanent Archival & Notification Status Banner */}
+          <div className="mb-4 p-3 rounded-xl bg-teal-50/80 border border-teal-200 text-xs text-teal-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0 animate-pulse"></span>
+              <span className="font-bold">Permanent Student Archive Active:</span>
+              <span className="text-slate-600">Saved forever across all updates & server restarts</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-teal-800 bg-white/80 px-2.5 py-1 rounded-lg border border-teal-200/80 shrink-0">
+              <span>📧 Alerts to:</span>
+              <strong className="text-teal-950 font-mono">rarb367@gmail.com</strong>
+            </div>
+          </div>
+
           {/* Controls: Search, Sort, Export */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
             {/* Search Input */}
@@ -470,6 +483,8 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
                           </span>
                         </div>
                         <div className="text-xs text-slate-600 flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <span>School: <strong className="text-slate-800">{st.school || 'Not specified'}</strong></span>
+                          <span>•</span>
                           <span>Phone: <strong>{st.phoneNumber}</strong></span>
                           <span>•</span>
                           <span>Gmail: <a href={`mailto:${st.email}`} className="text-teal-700 underline">{st.email}</a></span>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   ArrowLeft,
   ChevronRight,
+  ChevronLeft,
   Clock,
   BookOpen,
   Filter,
@@ -12,6 +13,8 @@ import {
   Layers,
   ArrowRight,
   HelpCircle,
+  GraduationCap,
+  LayoutGrid,
 } from 'lucide-react';
 import { AnswerFeedbackMode, ExamYear, SubjectId, Question } from '../types';
 import { SUBJECT_CONFIGS, formatDurationHHMMSS } from '../data/subjectConfig';
@@ -202,7 +205,82 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
   const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [selectedUnitGrade, setSelectedUnitGrade] = useState<'all' | 9 | 10 | 11 | 12>('all');
+  const [practiceViewMode, setPracticeViewMode] = useState<'unit' | 'grade' | 'category'>(
+    isSpecialCategorySubject ? 'category' : 'unit'
+  );
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
+
+  const GRADE_LIST: Array<'all' | 12 | 11 | 10 | 9> = ['all', 12, 11, 10, 9];
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      setTouchStartX(e.touches[0].clientX);
+      setTouchStartY(e.touches[0].clientY);
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null || touchStartY === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const diffX = touchStartX - touchEndX;
+    const diffY = touchStartY - touchEndY;
+
+    // Detect horizontal swipe (> 40px and horizontal dominance)
+    if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY) * 1.1) {
+      if (diffX > 0) {
+        // Swipe Left: move forward through grades or switch to grade classification
+        handleSwipeLeft();
+      } else {
+        // Swipe Right: move backward through grades or switch to unit classification
+        handleSwipeRight();
+      }
+    }
+    setTouchStartX(null);
+    setTouchStartY(null);
+  };
+
+  const handleSwipeLeft = () => {
+    if (practiceViewMode === 'unit') {
+      const idx = GRADE_LIST.indexOf(selectedUnitGrade);
+      if (idx < GRADE_LIST.length - 1) {
+        setSelectedUnitGrade(GRADE_LIST[idx + 1]);
+      } else {
+        setPracticeViewMode('grade');
+      }
+    } else if (practiceViewMode === 'category') {
+      setPracticeViewMode('grade');
+    } else {
+      setPracticeViewMode('unit');
+      setSelectedUnitGrade('all');
+    }
+  };
+
+  const handleSwipeRight = () => {
+    if (practiceViewMode === 'unit') {
+      const idx = GRADE_LIST.indexOf(selectedUnitGrade);
+      if (idx > 0) {
+        setSelectedUnitGrade(GRADE_LIST[idx - 1]);
+      } else {
+        if (isSpecialCategorySubject) {
+          setPracticeViewMode('category');
+        } else {
+          setPracticeViewMode('grade');
+        }
+      }
+    } else if (practiceViewMode === 'grade') {
+      if (isSpecialCategorySubject) {
+        setPracticeViewMode('category');
+      } else {
+        setPracticeViewMode('unit');
+        setSelectedUnitGrade(9);
+      }
+    } else {
+      setPracticeViewMode('grade');
+    }
+  };
 
   const getGradeCircleBg = (grade: number | string) => {
     const gNum = typeof grade === 'string' ? parseInt(grade, 10) : grade;
@@ -541,192 +619,400 @@ export const SubjectExamPage: React.FC<SubjectExamPageProps> = ({
               );
             })}
           </div>
-        ) : isSpecialCategorySubject ? (
-          /* VIEW 3A: SPECIAL CATEGORY VIEW FOR ENGLISH & APTITUDE WHEN TOUCHING A SPECIFIC YEAR */
-          <div className="space-y-3">
-            {(subjectId === 'english' ? ENGLISH_CATEGORIES : APTITUDE_CATEGORIES).map(
-              (cat) => {
-                const matchingQuestions = filterQuestionsByCategory(
-                  subjectId,
-                  cat.title,
-                  activeTab
-                );
-                const qCount = matchingQuestions.length;
-                const stats = StorageService.getUnitStats(subjectId, cat.title);
-                const progressPct = stats?.bestScore || 0;
-                const durationSec = Math.max(120, qCount * 120);
-
-                return (
-                  <div
-                    key={cat.categoryNumber}
-                    onClick={() => {
-                      if (qCount === 0) {
-                        setSoonModalMessage(
-                          'No examination questions currently available for this category. Rebira will add them soon.'
-                        );
-                        return;
-                      }
-                      setModeModalTarget({
-                        unitTitle: cat.title,
-                        year:
-                          activeTab !== 'All'
-                            ? (activeTab.replace(/\s*(Na|So)$/i, '').trim() as ExamYear)
-                            : undefined,
-                        isUnitPractice: true,
-                        title: `${config.title} — Category ${cat.categoryNumber}: ${cat.title}`,
-                        questionCount: qCount,
-                        durationSeconds: durationSec,
-                      });
-                    }}
-                    className="bg-white rounded-xl p-3.5 shadow-2xs border border-slate-200/90 hover:shadow-md transition active:scale-[0.99] cursor-pointer flex items-center gap-3.5"
-                  >
-                    {/* Pink/Red Circular Badge with Category Number */}
-                    <div className="w-12 h-12 rounded-full bg-[#e91e63] text-white font-black text-lg flex items-center justify-center shrink-0 shadow-xs">
-                      {cat.categoryNumber}
-                    </div>
-
-                    {/* Category Details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between text-xs mb-0.5">
-                        <span className="font-bold text-slate-900 text-sm">
-                          Category {cat.categoryNumber}
-                        </span>
-                        <span className="text-slate-500 font-medium">
-                          {qCount} {qCount === 1 ? 'ques' : 'ques'}
-                        </span>
-                      </div>
-
-                      <h4 className="font-medium text-slate-800 text-xs sm:text-sm truncate">
-                        {cat.title}
-                      </h4>
-
-                      {/* Participation Level Bar */}
-                      <div className="mt-2 w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            progressPct > 0 ? 'bg-[#43a047]' : 'bg-[#e53935] w-2'
-                          }`}
-                          style={{ width: progressPct > 0 ? `${progressPct}%` : '8px' }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-            )}
-          </div>
         ) : (
-          /* VIEW 3B: PRACTICE BY UNIT FOR SCIENCE SUBJECTS */
-          <div className="space-y-3">
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          /* VIEW 3: PRACTICE BY CATEGORY & UNIT FOR ACTIVE YEAR WITH SWIPEABLE GRADE & UNIT ACCESS */
+          <div
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            className="space-y-3 select-none"
+          >
+            {/* View Mode Switcher Header */}
+            <div className="flex items-center bg-white p-1 rounded-xl border border-slate-200 shadow-2xs gap-1">
+              {isSpecialCategorySubject && (
+                <button
+                  onClick={() => setPracticeViewMode('category')}
+                  className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                    practiceViewMode === 'category'
+                      ? 'bg-[#00897b] text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  <span>Categories</span>
+                </button>
+              )}
               <button
-                onClick={() => setSelectedUnitGrade('all')}
-                className={`px-3 py-1 rounded-full text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-                  selectedUnitGrade === 'all'
-                    ? 'bg-slate-900 text-white shadow-xs'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                onClick={() => setPracticeViewMode('unit')}
+                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                  practiceViewMode === 'unit'
+                    ? 'bg-[#00897b] text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
-                All Grades ({units.length})
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>Unit Classification</span>
               </button>
-              {([12, 11, 10, 9] as const).map((gr) => {
-                const countForGr = units.filter((u) => u.grade === gr).length;
-                if (countForGr === 0) return null;
-                const isSelected = selectedUnitGrade === gr;
-                return (
-                  <button
-                    key={gr}
-                    onClick={() => setSelectedUnitGrade(gr)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
-                      isSelected
-                        ? `${getGradeCircleBg(gr)} text-white shadow-xs`
-                        : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <span
-                      className={`w-2 h-2 rounded-full ${isSelected ? 'bg-white' : getGradeCircleBg(gr)}`}
-                    />
-                    <span>Grade {gr}</span>
-                    <span className={`text-[10px] ${isSelected ? 'text-white/80' : 'text-slate-400'}`}>
-                      ({countForGr})
-                    </span>
-                  </button>
-                );
-              })}
+              <button
+                onClick={() => setPracticeViewMode('grade')}
+                className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                  practiceViewMode === 'grade'
+                    ? 'bg-[#00897b] text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span>Grade Classification</span>
+              </button>
             </div>
 
-            {units
-              .filter((u) => selectedUnitGrade === 'all' || u.grade === selectedUnitGrade)
-              .map((u) => {
-                const yearQuestions = ALL_QUESTIONS.filter(
-                  (q) =>
-                    q.subject === subjectId &&
-                    q.unit.toLowerCase() === u.title.toLowerCase() &&
-                    q.year === activeTab
-                );
-                const allUnitQuestions = ALL_QUESTIONS.filter(
-                  (q) => q.subject === subjectId && q.unit.toLowerCase() === u.title.toLowerCase()
-                );
-                const qCount = activeTab === 'All' ? allUnitQuestions.length : yearQuestions.length;
-                const unitStats = StorageService.getUnitStats(subjectId, u.title);
-                const progressPct = unitStats?.bestScore || 0;
-                const durationSec = Math.max(120, qCount * 120);
-                const gradeCircleBg = getGradeCircleBg(u.grade);
+            {/* Interactive Swipe Guidance Banner with Prev/Next Controls */}
+            <div className="px-3 py-1.5 rounded-xl bg-teal-50 border border-teal-200/90 flex items-center justify-between text-xs text-teal-900 shadow-2xs">
+              <button
+                onClick={handleSwipeRight}
+                className="py-1 px-2 rounded-md hover:bg-teal-100 text-teal-800 flex items-center gap-1 font-bold cursor-pointer transition active:scale-95"
+                title="Previous Grade or View"
+              >
+                <ChevronLeft className="w-4 h-4 text-teal-700" />
+                <span className="text-[11px] hidden sm:inline">Prev</span>
+              </button>
 
-                return (
-                  <div
-                    key={u.id}
-                    onClick={() => {
-                      if (qCount === 0) {
-                        setSoonModalMessage(
-                          'No examination questions currently available for this unit. Rebira will add them soon.'
-                        );
-                        return;
-                      }
-                      setModeModalTarget({
-                        unitTitle: u.title,
-                        grade: `Grade ${u.grade}`,
-                        year: activeTab !== 'All' ? (activeTab as ExamYear) : undefined,
-                        isUnitPractice: true,
-                        title: `${config.title} — Grade ${u.grade} Unit ${u.unitNumber}: ${u.title}`,
-                        questionCount: qCount,
-                        durationSeconds: durationSec,
-                      });
-                    }}
-                    className="bg-white rounded-xl p-3.5 shadow-2xs border border-slate-200/90 hover:shadow-md transition active:scale-[0.99] cursor-pointer flex items-center gap-3.5"
-                  >
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-center truncate px-1">
+                <span className="font-bold text-[#00897b]">👈 Swipe ↔ 👉</span>
+                <span className="text-teal-900 truncate">
+                  {practiceViewMode === 'grade'
+                    ? 'Grade Classification (Grades 12 - 9)'
+                    : practiceViewMode === 'unit'
+                    ? `Unit Classification • ${selectedUnitGrade === 'all' ? 'All Grades' : `Grade ${selectedUnitGrade}`}`
+                    : 'Category Breakdown'}
+                </span>
+              </div>
+
+              <button
+                onClick={handleSwipeLeft}
+                className="py-1 px-2 rounded-md hover:bg-teal-100 text-teal-800 flex items-center gap-1 font-bold cursor-pointer transition active:scale-95"
+                title="Next Grade or View"
+              >
+                <span className="text-[11px] hidden sm:inline">Next</span>
+                <ChevronRight className="w-4 h-4 text-teal-700" />
+              </button>
+            </div>
+
+            {/* SUB-VIEW A: GRADE CLASSIFICATION CARDS */}
+            {practiceViewMode === 'grade' ? (
+              <div className="space-y-3 animate-fade-in">
+                {([12, 11, 10, 9] as const).map((gr) => {
+                  const gradeUnits = units.filter((u) => u.grade === gr);
+                  const cleanYear = activeTab.replace(/\s*(Na|So)$/i, '').trim();
+                  const gradeQuestions = ALL_QUESTIONS.filter((q) => {
+                    if (q.subject !== subjectId) return false;
+                    if (q.grade !== gr) return false;
+                    return activeTab === 'All' || q.year === cleanYear;
+                  });
+                  const qCount = gradeQuestions.length;
+                  const durationSec = Math.max(120, qCount * 120);
+
+                  return (
                     <div
-                      className={`w-12 h-12 rounded-full ${gradeCircleBg} text-white font-extrabold text-lg flex items-center justify-center shrink-0 shadow-xs`}
+                      key={gr}
+                      className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs hover:shadow-md transition"
                     >
-                      {u.grade}
-                    </div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-12 h-12 rounded-full ${getGradeCircleBg(gr)} text-white font-extrabold text-lg flex items-center justify-center shadow-xs shrink-0`}
+                          >
+                            {gr}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-bold text-slate-900 text-sm sm:text-base">
+                                Grade {gr} Classification
+                              </h3>
+                              <span className="text-[10px] bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-full">
+                                {activeTab} EC
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              {gradeUnits.length > 0 ? `${gradeUnits.length} curriculum units • ` : ''}
+                              <strong>{qCount}</strong> practice questions
+                            </p>
+                          </div>
+                        </div>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between text-xs mb-0.5">
-                        <span className="font-bold text-slate-900">
-                          Unit {u.unitNumber}
-                        </span>
-                        <span className="text-slate-500 font-medium">
-                          {qCount} {qCount === 1 ? 'ques' : 'questions'}
-                        </span>
+                        {gradeUnits.length > 0 && (
+                          <button
+                            onClick={() => {
+                              setSelectedUnitGrade(gr);
+                              setPracticeViewMode('unit');
+                            }}
+                            className="text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-lg border border-teal-200 transition cursor-pointer"
+                          >
+                            View Units
+                          </button>
+                        )}
                       </div>
 
-                      <h4 className="font-medium text-slate-800 text-sm truncate">
-                        {u.title}
-                      </h4>
+                      {/* Units preview if available */}
+                      {gradeUnits.length > 0 && (
+                        <div className="my-2 space-y-1 bg-slate-50/70 p-2.5 rounded-xl border border-slate-100">
+                          {gradeUnits.slice(0, 3).map((u) => {
+                            const uQs = gradeQuestions.filter(
+                              (q) => q.unit.toLowerCase() === u.title.toLowerCase()
+                            );
+                            return (
+                              <div
+                                key={u.id}
+                                className="text-xs text-slate-700 flex items-center justify-between py-0.5"
+                              >
+                                <span className="truncate mr-2">
+                                  • Unit {u.unitNumber}: {u.title}
+                                </span>
+                                <span className="text-[10px] text-slate-400 shrink-0 font-medium">
+                                  {uQs.length} ques
+                                </span>
+                              </div>
+                            );
+                          })}
+                          {gradeUnits.length > 3 && (
+                            <p className="text-[11px] text-teal-700 font-semibold pt-0.5">
+                              + {gradeUnits.length - 3} more curriculum units
+                            </p>
+                          )}
+                        </div>
+                      )}
 
-                      <div className="mt-2 w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            progressPct > 0 ? 'bg-[#43a047]' : 'bg-[#e53935] w-2'
-                          }`}
-                          style={{ width: progressPct > 0 ? `${progressPct}%` : '8px' }}
+                      <button
+                        onClick={() => {
+                          if (qCount === 0) {
+                            setSoonModalMessage(
+                              `No examination questions currently available for Grade ${gr}. Rebira will add them soon.`
+                            );
+                            return;
+                          }
+                          setModeModalTarget({
+                            grade: `Grade ${gr}`,
+                            year:
+                              activeTab !== 'All'
+                                ? (cleanYear as ExamYear)
+                                : undefined,
+                            isUnitPractice: true,
+                            title: `${config.title} — Grade ${gr} Classification (${activeTab} EC)`,
+                            questionCount: qCount,
+                            durationSeconds: durationSec,
+                          });
+                        }}
+                        className={`w-full mt-2 py-2.5 rounded-xl font-bold text-xs shadow-xs transition flex items-center justify-center gap-2 cursor-pointer ${
+                          qCount === 0
+                            ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
+                            : 'bg-[#00897b] hover:bg-[#00796b] text-white active:scale-[0.99]'
+                        }`}
+                      >
+                        <Play className="w-3.5 h-3.5 fill-current" />
+                        <span>PRACTICE ALL GRADE {gr} QUESTIONS ({qCount} Qs)</span>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : practiceViewMode === 'unit' ? (
+              /* SUB-VIEW B: UNIT CLASSIFICATION WITH GRADE FILTER PILLS */
+              <div className="space-y-3 animate-fade-in">
+                {/* Horizontal Grade Pills */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                  <button
+                    onClick={() => setSelectedUnitGrade('all')}
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition whitespace-nowrap cursor-pointer ${
+                      selectedUnitGrade === 'all'
+                        ? 'bg-slate-900 text-white shadow-xs'
+                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    All Grades ({units.length > 0 ? units.length : 'All'})
+                  </button>
+                  {([12, 11, 10, 9] as const).map((gr) => {
+                    const countForGr = units.filter((u) => u.grade === gr).length;
+                    const cleanYear = activeTab.replace(/\s*(Na|So)$/i, '').trim();
+                    const questionsForGr = ALL_QUESTIONS.filter(
+                      (q) => q.subject === subjectId && q.grade === gr && (activeTab === 'All' || q.year === cleanYear)
+                    ).length;
+                    if (countForGr === 0 && questionsForGr === 0) return null;
+                    const isSelected = selectedUnitGrade === gr;
+                    return (
+                      <button
+                        key={gr}
+                        onClick={() => setSelectedUnitGrade(gr)}
+                        className={`px-2.5 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                          isSelected
+                            ? `${getGradeCircleBg(gr)} text-white shadow-xs`
+                            : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <span
+                          className={`w-2 h-2 rounded-full ${isSelected ? 'bg-white' : getGradeCircleBg(gr)}`}
                         />
-                      </div>
-                    </div>
+                        <span>Grade {gr}</span>
+                        <span className={`text-[10px] ${isSelected ? 'text-white/80' : 'text-slate-400'}`}>
+                          ({countForGr > 0 ? `${countForGr} units` : `${questionsForGr} Qs`})
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* List of Units */}
+                {units.length > 0 ? (
+                  units
+                    .filter((u) => selectedUnitGrade === 'all' || u.grade === selectedUnitGrade)
+                    .map((u) => {
+                      const cleanYear = activeTab.replace(/\s*(Na|So)$/i, '').trim();
+                      const yearQuestions = ALL_QUESTIONS.filter(
+                        (q) =>
+                          q.subject === subjectId &&
+                          q.unit.toLowerCase() === u.title.toLowerCase() &&
+                          q.year === cleanYear
+                      );
+                      const allUnitQuestions = ALL_QUESTIONS.filter(
+                        (q) => q.subject === subjectId && q.unit.toLowerCase() === u.title.toLowerCase()
+                      );
+                      const qCount = activeTab === 'All' ? allUnitQuestions.length : yearQuestions.length;
+                      const unitStats = StorageService.getUnitStats(subjectId, u.title);
+                      const progressPct = unitStats?.bestScore || 0;
+                      const durationSec = Math.max(120, qCount * 120);
+                      const gradeCircleBg = getGradeCircleBg(u.grade);
+
+                      return (
+                        <div
+                          key={u.id}
+                          onClick={() => {
+                            if (qCount === 0) {
+                              setSoonModalMessage(
+                                'No examination questions currently available for this unit. Rebira will add them soon.'
+                              );
+                              return;
+                            }
+                            setModeModalTarget({
+                              unitTitle: u.title,
+                              grade: `Grade ${u.grade}`,
+                              year: activeTab !== 'All' ? (cleanYear as ExamYear) : undefined,
+                              isUnitPractice: true,
+                              title: `${config.title} — Grade ${u.grade} Unit ${u.unitNumber}: ${u.title}`,
+                              questionCount: qCount,
+                              durationSeconds: durationSec,
+                            });
+                          }}
+                          className="bg-white rounded-xl p-3.5 shadow-2xs border border-slate-200/90 hover:shadow-md transition active:scale-[0.99] cursor-pointer flex items-center gap-3.5"
+                        >
+                          <div
+                            className={`w-12 h-12 rounded-full ${gradeCircleBg} text-white font-extrabold text-lg flex items-center justify-center shrink-0 shadow-xs`}
+                          >
+                            {u.grade}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between text-xs mb-0.5">
+                              <span className="font-bold text-slate-900">
+                                Unit {u.unitNumber}
+                              </span>
+                              <span className="text-slate-500 font-medium">
+                                {qCount} {qCount === 1 ? 'ques' : 'questions'}
+                              </span>
+                            </div>
+
+                            <h4 className="font-medium text-slate-800 text-sm truncate">
+                              {u.title}
+                            </h4>
+
+                            <div className="mt-2 w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all duration-500 ${
+                                  progressPct > 0 ? 'bg-[#43a047]' : 'bg-[#e53935] w-2'
+                                }`}
+                                style={{ width: progressPct > 0 ? `${progressPct}%` : '8px' }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                ) : (
+                  /* Fallback when units list is empty: generate from questions */
+                  <div className="text-center py-6 bg-white rounded-xl border p-4 text-xs text-slate-500">
+                    Use Grade Classification or Categories above to practice.
                   </div>
-                );
-              })}
+                )}
+              </div>
+            ) : (
+              /* SUB-VIEW C: CATEGORIES CLASSIFICATION (FOR ENGLISH & APTITUDE) */
+              <div className="space-y-3 animate-fade-in">
+                {(subjectId === 'english' ? ENGLISH_CATEGORIES : APTITUDE_CATEGORIES).map(
+                  (cat) => {
+                    const matchingQuestions = filterQuestionsByCategory(
+                      subjectId,
+                      cat.title,
+                      activeTab
+                    );
+                    const qCount = matchingQuestions.length;
+                    const stats = StorageService.getUnitStats(subjectId, cat.title);
+                    const progressPct = stats?.bestScore || 0;
+                    const durationSec = Math.max(120, qCount * 120);
+
+                    return (
+                      <div
+                        key={cat.categoryNumber}
+                        onClick={() => {
+                          if (qCount === 0) {
+                            setSoonModalMessage(
+                              'No examination questions currently available for this category. Rebira will add them soon.'
+                            );
+                            return;
+                          }
+                          setModeModalTarget({
+                            unitTitle: cat.title,
+                            year:
+                              activeTab !== 'All'
+                                ? (activeTab.replace(/\s*(Na|So)$/i, '').trim() as ExamYear)
+                                : undefined,
+                            isUnitPractice: true,
+                            title: `${config.title} — Category ${cat.categoryNumber}: ${cat.title}`,
+                            questionCount: qCount,
+                            durationSeconds: durationSec,
+                          });
+                        }}
+                        className="bg-white rounded-xl p-3.5 shadow-2xs border border-slate-200/90 hover:shadow-md transition active:scale-[0.99] cursor-pointer flex items-center gap-3.5"
+                      >
+                        <div className="w-12 h-12 rounded-full bg-[#e91e63] text-white font-black text-lg flex items-center justify-center shrink-0 shadow-xs">
+                          {cat.categoryNumber}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between text-xs mb-0.5">
+                            <span className="font-bold text-slate-900 text-sm">
+                              Category {cat.categoryNumber}
+                            </span>
+                            <span className="text-slate-500 font-medium">
+                              {qCount} {qCount === 1 ? 'ques' : 'ques'}
+                            </span>
+                          </div>
+
+                          <h4 className="font-medium text-slate-800 text-xs sm:text-sm truncate">
+                            {cat.title}
+                          </h4>
+
+                          <div className="mt-2 w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-500 ${
+                                progressPct > 0 ? 'bg-[#43a047]' : 'bg-[#e53935] w-2'
+                              }`}
+                              style={{ width: progressPct > 0 ? `${progressPct}%` : '8px' }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

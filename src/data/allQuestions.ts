@@ -270,6 +270,22 @@ export function getQuestionsForUnit(subjectId: SubjectId, unitTitle: string, yea
 }
 
 /**
+ * Retrieve questions filtered by Grade (taking questions from all units of that grade) and optional Year
+ */
+export function getQuestionsForGrade(subjectId: SubjectId, grade: number | string, year?: ExamYear): Question[] {
+  const numericGrade = typeof grade === 'string' ? parseInt(grade.replace(/[^0-9]/g, ''), 10) : grade;
+  return ALL_QUESTIONS.filter((q) => {
+    const matchSubject = q.subject === subjectId;
+    const matchGrade = q.grade === numericGrade || q.grade === grade;
+    const matchYear = year ? q.year === year : true;
+    return matchSubject && matchGrade && matchYear;
+  }).sort((a, b) => {
+    if (a.year !== b.year) return b.year.localeCompare(a.year);
+    return a.questionNumber - b.questionNumber;
+  });
+}
+
+/**
  * Retrieve questions by Topic
  */
 export function getQuestionsByTopic(subjectId: SubjectId, topicTitle: string): Question[] {

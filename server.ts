@@ -13,6 +13,8 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '@Rabira1818';
 const DB_DIR = path.resolve(process.cwd(), 'data');
 const DB_FILE = path.join(DB_DIR, 'database.json');
 const SESSIONS_FILE = path.join(DB_DIR, 'sessions.json');
+const ARCHIVE_FILE = path.join(DB_DIR, 'registered_students_archive.json');
+const NOTIFICATIONS_LOG_FILE = path.join(DB_DIR, 'registration_notifications.json');
 
 // Ensure database directory exists
 if (!fs.existsSync(DB_DIR)) {
@@ -74,130 +76,100 @@ interface DatabaseSchema {
   messages: AdminMessage[];
 }
 
-const DEFAULT_STUDENTS: DatabaseSchema['students'] = {
-  'rabirasisay81@gmail.com': {
-    fullName: 'Rebira Sisay Giti',
-    phoneNumber: '+251911234567',
-    email: 'rabirasisay81@gmail.com',
-    school: 'Ambo Ifa Boru Special Boarding Secondary School',
-    grade: 'Grade 12',
-    registeredAt: '2026-10-25T08:30:00.000Z',
-  },
-  'rarb368@gmail.com': {
-    fullName: 'Rebira Sisay',
-    phoneNumber: '+251922345678',
-    email: 'rarb368@gmail.com',
-    school: 'Ambo Ifa Boru Special Boarding Secondary School',
-    grade: 'Grade 12',
-    registeredAt: '2026-10-26T09:15:00.000Z',
-  },
-  'chala.bekele@gmail.com': {
-    fullName: 'Chala Bekele Dadi',
-    phoneNumber: '+251933456789',
-    email: 'chala.bekele@gmail.com',
-    school: 'Ambo Ifa Boru Special Boarding Secondary School',
-    grade: 'Grade 12',
-    registeredAt: '2026-10-26T10:00:00.000Z',
-  },
-  'bontu.desta@gmail.com': {
-    fullName: 'Bontu Desta Tafa',
-    phoneNumber: '+251944567890',
-    email: 'bontu.desta@gmail.com',
-    school: 'Ambo Ifa Boru Special Boarding Secondary School',
-    grade: 'Grade 12',
-    registeredAt: '2026-10-27T11:20:00.000Z',
-  },
-  'tolera.gemechu@gmail.com': {
-    fullName: 'Tolera Gemechu Kuma',
-    phoneNumber: '+251955678901',
-    email: 'tolera.gemechu@gmail.com',
-    school: 'Ambo Ifa Boru Special Boarding Secondary School',
-    grade: 'Grade 12',
-    registeredAt: '2026-10-27T14:45:00.000Z',
-  },
-  'hawi.abera@gmail.com': {
-    fullName: 'Hawi Abera Feyisa',
-    phoneNumber: '+251966789012',
-    email: 'hawi.abera@gmail.com',
-    school: 'Ambo Ifa Boru Special Boarding Secondary School',
-    grade: 'Grade 12',
-    registeredAt: '2026-10-28T07:10:00.000Z',
-  },
-  'kenenisa@aibsbss.edu.et': {
-    fullName: 'Kenenisa Bekele',
-    phoneNumber: '+251977889900',
-    email: 'kenenisa@aibsbss.edu.et',
-    school: 'Ambo Ifa Boru Special Boarding Secondary School',
-    grade: 'Grade 12',
-    registeredAt: '2026-10-28T23:12:42.415Z',
-  },
-};
+const DEFAULT_STUDENTS: DatabaseSchema['students'] = {};
 
-const DEFAULT_ATTEMPTS = [
-  {
-    id: 'att-seed-1',
-    subject: 'aptitude',
-    year: '2017',
-    isUnitPractice: false,
-    scorePercentage: 92,
-    scoreRaw: 55,
-    totalQuestions: 60,
-    timeSpentSeconds: 6120,
-    feedbackMode: 'after_finishing',
-    completedAt: '2026-10-27T16:00:00.000Z',
-    studentEmail: 'rabirasisay81@gmail.com',
-    studentName: 'Rebira Sisay Giti',
-  },
-  {
-    id: 'att-seed-2',
-    subject: 'chemistry',
-    year: '2018',
-    isUnitPractice: false,
-    scorePercentage: 88,
-    scoreRaw: 70,
-    totalQuestions: 80,
-    timeSpentSeconds: 6800,
-    feedbackMode: 'after_finishing',
-    completedAt: '2026-10-28T09:30:00.000Z',
-    studentEmail: 'rabirasisay81@gmail.com',
-    studentName: 'Rebira Sisay Giti',
-  },
-  {
-    id: 'att-seed-3',
-    subject: 'biology',
-    year: '2017',
-    isUnitPractice: false,
-    scorePercentage: 85,
-    scoreRaw: 85,
-    totalQuestions: 100,
-    timeSpentSeconds: 7000,
-    feedbackMode: 'after_finishing',
-    completedAt: '2026-10-27T18:00:00.000Z',
-    studentEmail: 'chala.bekele@gmail.com',
-    studentName: 'Chala Bekele Dadi',
-  },
-  {
-    id: 'att-seed-4',
-    subject: 'physics',
-    year: '2016',
-    isUnitPractice: false,
-    scorePercentage: 78,
-    scoreRaw: 39,
-    totalQuestions: 50,
-    timeSpentSeconds: 7100,
-    feedbackMode: 'after_finishing',
-    completedAt: '2026-10-28T11:00:00.000Z',
-    studentEmail: 'bontu.desta@gmail.com',
-    studentName: 'Bontu Desta Tafa',
-  },
-];
+const DEFAULT_ATTEMPTS: any[] = [];
+
+function appendNotificationLog(entry: any): void {
+  try {
+    let logs: any[] = [];
+    if (fs.existsSync(NOTIFICATIONS_LOG_FILE)) {
+      try {
+        logs = JSON.parse(fs.readFileSync(NOTIFICATIONS_LOG_FILE, 'utf-8'));
+      } catch {}
+    }
+    logs.unshift(entry);
+    fs.writeFileSync(NOTIFICATIONS_LOG_FILE, JSON.stringify(logs.slice(0, 500), null, 2), 'utf-8');
+  } catch {}
+}
+
+async function sendStudentRegistrationEmail(student: {
+  fullName: string;
+  phoneNumber: string;
+  email: string;
+  school: string;
+  grade: string;
+  registeredAt: string;
+}) {
+  const targetEmail = 'rarb367@gmail.com';
+  console.log(`[Registration] Dispatching email to ${targetEmail} for: ${student.fullName}`);
+
+  const payload = {
+    _subject: `New AIBSBSS Student Registered: ${student.fullName} (${student.grade})`,
+    _template: 'table',
+    _captcha: 'false',
+    name: student.fullName,
+    email: student.email,
+    'Student Full Name': student.fullName,
+    'School Name': student.school,
+    'Phone Number': student.phoneNumber,
+    'Student Gmail': student.email,
+    'Grade Level': student.grade,
+    'Registration Date': student.registeredAt || new Date().toISOString(),
+    'Notification Recipient': targetEmail,
+    'Platform': "Rebira's Ethiopian University Entrance Exam (AIBSBSS)",
+  };
+
+  try {
+    const res = await fetch(`https://formsubmit.co/ajax/${targetEmail}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Origin': 'https://ais-pre-eat2fjuxpyz7pocktub6mn-253147144878.europe-west2.run.app',
+        'Referer': 'https://ais-pre-eat2fjuxpyz7pocktub6mn-253147144878.europe-west2.run.app/',
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json().catch(() => null);
+    console.log('[Registration] Email dispatch response:', result);
+
+    appendNotificationLog({
+      timestamp: new Date().toISOString(),
+      student,
+      recipient: targetEmail,
+      status: 'dispatched',
+      service: 'formsubmit',
+      result,
+    });
+  } catch (err) {
+    console.error('[Registration] Failed to dispatch email via FormSubmit:', err);
+    appendNotificationLog({
+      timestamp: new Date().toISOString(),
+      student,
+      recipient: targetEmail,
+      status: 'error',
+      error: String(err),
+    });
+  }
+}
 
 function readDatabase(): DatabaseSchema {
+  let archiveStudents: DatabaseSchema['students'] = {};
+  if (fs.existsSync(ARCHIVE_FILE)) {
+    try {
+      const arch = JSON.parse(fs.readFileSync(ARCHIVE_FILE, 'utf-8'));
+      if (arch && typeof arch === 'object') {
+        archiveStudents = arch;
+      }
+    } catch {}
+  }
+
   try {
     if (fs.existsSync(DB_FILE)) {
       const content = fs.readFileSync(DB_FILE, 'utf-8');
       const parsed = JSON.parse(content);
-      const students = { ...DEFAULT_STUDENTS, ...(parsed.students || {}) };
+      const students = { ...DEFAULT_STUDENTS, ...archiveStudents, ...(parsed.students || {}) };
       const attempts = (parsed.attempts && parsed.attempts.length > 0)
         ? parsed.attempts
         : [...DEFAULT_ATTEMPTS];
@@ -212,7 +184,7 @@ function readDatabase(): DatabaseSchema {
     console.error('Error reading database file', e);
   }
   return {
-    students: { ...DEFAULT_STUDENTS },
+    students: { ...DEFAULT_STUDENTS, ...archiveStudents },
     attempts: [...DEFAULT_ATTEMPTS],
     customQuestions: [],
     messages: [],
@@ -230,7 +202,22 @@ function writeDatabase(data: DatabaseSchema): void {
         if (Array.isArray(raw.attempts)) existingDiskAttempts = raw.attempts;
       } catch {}
     }
-    const mergedStudents = { ...DEFAULT_STUDENTS, ...existingDiskStudents, ...data.students };
+
+    let archiveStudents: DatabaseSchema['students'] = {};
+    if (fs.existsSync(ARCHIVE_FILE)) {
+      try {
+        const arch = JSON.parse(fs.readFileSync(ARCHIVE_FILE, 'utf-8'));
+        if (arch && typeof arch === 'object') archiveStudents = arch;
+      } catch {}
+    }
+
+    const mergedStudents = {
+      ...DEFAULT_STUDENTS,
+      ...archiveStudents,
+      ...existingDiskStudents,
+      ...data.students,
+    };
+
     const attemptMap = new Map<string, any>();
     DEFAULT_ATTEMPTS.forEach((att) => attemptMap.set(att.id, att));
     existingDiskAttempts.forEach((att) => attemptMap.set(att.id, att));
@@ -242,6 +229,7 @@ function writeDatabase(data: DatabaseSchema): void {
       attempts: Array.from(attemptMap.values()),
     };
     fs.writeFileSync(DB_FILE, JSON.stringify(toWrite, null, 2), 'utf-8');
+    fs.writeFileSync(ARCHIVE_FILE, JSON.stringify(mergedStudents, null, 2), 'utf-8');
   } catch (e) {
     console.error('Error writing database file', e);
   }
@@ -335,20 +323,58 @@ app.post('/api/admin/logout', (req: Request, res: Response) => {
   return res.json({ success: true, message: 'Logged out successfully' });
 });
 
+// 3b. Student Registration & Email Dispatch to rarb367@gmail.com
+app.post('/api/register', async (req: Request, res: Response) => {
+  const { profile } = req.body;
+  if (!profile || !profile.email || !profile.fullName) {
+    return res.status(400).json({ success: false, error: 'Full name and email are required' });
+  }
+
+  const studentData = {
+    fullName: String(profile.fullName).trim(),
+    phoneNumber: String(profile.phoneNumber || '').trim(),
+    email: String(profile.email).trim().toLowerCase(),
+    school: String(profile.school || 'Ambo Ifa Boru Special Boarding Secondary School').trim(),
+    grade: String(profile.grade || 'Grade 12').trim(),
+    registeredAt: profile.registeredAt || new Date().toISOString(),
+  };
+
+  const db = readDatabase();
+  db.students[studentData.email] = studentData;
+  writeDatabase(db);
+
+  // Dispatch email to rarb367@gmail.com in background without blocking student entry
+  sendStudentRegistrationEmail(studentData).catch((e) =>
+    console.error('Async registration email error:', e)
+  );
+
+  return res.json({
+    success: true,
+    message: 'Student registered successfully and notification dispatched',
+    student: studentData,
+    totalStudents: Object.keys(db.students).length,
+  });
+});
+
 // 4. Student Sync (Client sends registration or attempts to central database)
 app.post('/api/students/sync', (req: Request, res: Response) => {
   const { profile, attempt, attempts } = req.body;
   const db = readDatabase();
 
   if (profile && profile.email) {
-    db.students[profile.email.toLowerCase()] = {
+    const studentEmail = profile.email.toLowerCase();
+    const isNew = !db.students[studentEmail];
+    db.students[studentEmail] = {
       fullName: profile.fullName,
       phoneNumber: profile.phoneNumber,
-      email: profile.email.toLowerCase(),
+      email: studentEmail,
       school: profile.school || 'Ambo Ifa Boru Special Boarding Secondary School',
       grade: profile.grade || 'Grade 12',
       registeredAt: profile.registeredAt || new Date().toISOString(),
     };
+    if (isNew) {
+      sendStudentRegistrationEmail(db.students[studentEmail]).catch(() => {});
+    }
   }
 
   if (attempt && attempt.id) {
@@ -395,6 +421,17 @@ app.get('/api/admin/students', authenticateAdmin, (req: Request, res: Response) 
   });
 
   return res.json({ success: true, students: responseData, totalCount: responseData.length });
+});
+
+// 5b. Admin: Get registration email dispatch notifications log
+app.get('/api/admin/notifications', authenticateAdmin, (_req: Request, res: Response) => {
+  let logs: any[] = [];
+  if (fs.existsSync(NOTIFICATIONS_LOG_FILE)) {
+    try {
+      logs = JSON.parse(fs.readFileSync(NOTIFICATIONS_LOG_FILE, 'utf-8'));
+    } catch {}
+  }
+  return res.json({ success: true, notifications: logs, recipientEmail: 'rarb367@gmail.com' });
 });
 
 // 6. Admin: Question Management (CRUD)

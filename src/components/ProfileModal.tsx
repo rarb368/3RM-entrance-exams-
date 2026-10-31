@@ -34,6 +34,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [fullName, setFullName] = useState(profile?.fullName || '');
+  const [school, setSchool] = useState(profile?.school || '');
   const [phoneNumber, setPhoneNumber] = useState(profile?.phoneNumber || '');
   const [email, setEmail] = useState(profile?.email || '');
   const [grade, setGrade] = useState(profile?.grade || 'Grade 12');
@@ -56,6 +57,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       setEditError('Please enter a valid full name');
       return;
     }
+    if (!school.trim()) {
+      setEditError('Please enter your school name');
+      return;
+    }
     if (!isValidEthiopianPhone(phoneNumber)) {
       setEditError('Please enter a valid phone number');
       return;
@@ -69,7 +74,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       fullName: fullName.trim(),
       phoneNumber: phoneNumber.trim(),
       email: email.trim().toLowerCase(),
-      school: profile?.school || 'Ambo Ifa Boru Special Boarding Secondary School',
+      school: school.trim(),
       grade,
       registeredAt: profile?.registeredAt || new Date().toISOString(),
     };
@@ -98,7 +103,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             </div>
             <div>
               <h3 className="font-bold text-base leading-tight">Student Profile & Statistics</h3>
-              <p className="text-teal-100 text-xs">Ambo Ifa Boru Special Boarding Secondary School</p>
+              <p className="text-teal-100 text-xs">{profile?.school || 'Ethiopian University Entrance Examination'}</p>
             </div>
           </div>
           <button
@@ -139,6 +144,18 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
+                    className="w-full text-xs p-2 rounded-lg border border-slate-300 outline-none focus:border-teal-600"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-600 block mb-0.5">
+                    School Name
+                  </label>
+                  <input
+                    type="text"
+                    value={school}
+                    onChange={(e) => setSchool(e.target.value)}
+                    placeholder="Enter your school name"
                     className="w-full text-xs p-2 rounded-lg border border-slate-300 outline-none focus:border-teal-600"
                   />
                 </div>
