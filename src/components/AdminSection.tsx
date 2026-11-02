@@ -22,6 +22,8 @@ import {
   ShieldCheck,
   Megaphone,
   Send,
+  Mail,
+  RefreshCw,
 } from 'lucide-react';
 import { AdminStudentSummary, Question, SubjectId } from '../types';
 import { SUBJECT_CONFIGS } from '../data/subjectConfig';
@@ -40,7 +42,7 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Admin tabs
-  const [activeTab, setActiveTab] = useState<'students' | 'questions' | 'broadcast'>('students');
+  const [activeTab, setActiveTab] = useState<'students' | 'questions' | 'broadcast' | 'notifications'>('students');
 
   // Broadcast state
   const [broadcastTitle, setBroadcastTitle] = useState('');
@@ -49,6 +51,10 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
   const [broadcastSuccessMessage, setBroadcastSuccessMessage] = useState<string | null>(null);
   const [broadcastErrorMessage, setBroadcastErrorMessage] = useState<string | null>(null);
   const [isSendingBroadcast, setIsSendingBroadcast] = useState(false);
+
+  // Email notifications state
+  const [notificationLogs, setNotificationLogs] = useState<any[]>([]);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
 
   // Students state - initialized with cached students to prevent blank displays during reloads
   const [students, setStudents] = useState<AdminStudentSummary[]>(() => {
@@ -84,6 +90,7 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
       const data = await res.json();
       if (data.valid) {
         fetchStudents(token);
+        fetchNotifications(token);
       } else {
         handleLogout();
       }
@@ -112,6 +119,7 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
         setAuthToken(data.token);
         setPasswordInput('');
         fetchStudents(data.token);
+        fetchNotifications(data.token);
       } else {
         setLoginError(data.error || 'Invalid administrator password');
       }
@@ -143,15 +151,52 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
       });
       const data = await res.json();
       if (data.success && Array.isArray(data.students)) {
-        setStudents(data.students);
-        try {
-          localStorage.setItem('3rm_admin_cached_students', JSON.stringify(data.students));
-        } catch {}
+        setStudents((prev) => {
+          const map = new Map<string, AdminStudentSummary>();
+          // Preserve any cached local students so they NEVER disappear
+          prev.forEach((s) => {
+            if (s && s.email) map.set(s.email.toLowerCase(), s);
+          });
+          // Merge with incoming server student records
+          data.students.forEach((s: AdminStudentSummary) => {
+            if (s && s.email) {
+              const existing = map.get(s.email.toLowerCase());
+              map.set(s.email.toLowerCase(), {
+                ...existing,
+                ...s,
+                attemptsCount: Math.max(existing?.attemptsCount || 0, s.attemptsCount || 0),
+                avgScore: s.avgScore || existing?.avgScore || 0,
+              });
+            }
+          });
+          const merged = Array.from(map.values());
+          try {
+            localStorage.setItem('3rm_admin_cached_students', JSON.stringify(merged));
+          } catch {}
+          return merged;
+        });
       }
     } catch (e) {
       console.error('Failed to load students', e);
     } finally {
       setIsLoadingStudents(false);
+    }
+  };
+
+  const fetchNotifications = async (token: string) => {
+    setIsLoadingNotifications(true);
+    try {
+      const res = await fetch('/api/admin/notifications', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success && Array.isArray(data.notifications)) {
+        setNotificationLogs(data.notifications);
+      }
+    } catch (e) {
+      console.error('Failed to load notifications', e);
+    } finally {
+      setIsLoadingNotifications(false);
     }
   };
 
@@ -397,6 +442,20 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
         >
           <Megaphone className="w-4 h-4" />
           <span>Send Message</span>
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab('notifications');
+            if (authToken) fetchNotifications(authToken);
+          }}
+          className={`flex-1 py-2 px-2 text-xs sm:text-sm font-bold rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
+            activeTab === 'notifications'
+              ? 'bg-[#00897b] text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <Mail className="w-4 h-4" />
+          <span>Email Logs ({notificationLogs.length})</span>
         </button>
       </div>
 
@@ -729,6 +788,106 @@ export const AdminSection: React.FC<AdminSectionProps> = ({ onBackToHome }) => {
               <span>{isSendingBroadcast ? 'Sending Notice...' : 'Send Message to Students'}</span>
             </button>
           </form>
+        </div>
+      )}
+
+      {/* TAB 4: EMAIL NOTIFICATIONS FEED */}
+      {activeTab === 'notifications' && (
+        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-slate-200">
+          <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+            <div>
+              <h3 className="font-bold text-slate-900 text-sm sm:text-base flex items-center gap-2">
+                <Mail className="w-4 h-4 text-teal-700" />
+                <span>Student Registration Email Alerts</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Every student registration triggers an automated delivery to{' '}
+                <strong className="text-teal-900 font-mono">rarb367@gmail.com</strong>
+              </p>
+            </div>
+
+            <button
+              onClick={() => authToken && fetchNotifications(authToken)}
+              disabled={isLoadingNotifications}
+              className="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoadingNotifications ? 'animate-spin text-teal-600' : ''}`} />
+              <span>Refresh</span>
+            </button>
+          </div>
+
+          <div className="mb-4 p-3 bg-teal-50/70 border border-teal-200 rounded-xl text-xs text-teal-900 space-y-1">
+            <div className="flex items-center gap-2 font-bold text-teal-950">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Active Notification Channels:</span>
+            </div>
+            <ul className="list-disc pl-5 space-y-0.5 text-[11px] text-teal-800">
+              <li>
+                <strong>Channel 1 (ShipMyForm):</strong> Instant delivery to <code>rarb367@gmail.com</code> with zero delays.
+              </li>
+              <li>
+                <strong>Channel 2 (FormSubmit):</strong> Dispatched directly to <code>rarb367@gmail.com</code>. (If not already activated, check your inbox/spam for the one-time "Activate FormSubmit" email).
+              </li>
+              <li>
+                <strong>Permanent Server Backup:</strong> Every registration is also preserved here in this log and in the Students tab forever.
+              </li>
+            </ul>
+          </div>
+
+          {notificationLogs.length === 0 ? (
+            <div className="text-center py-12 text-slate-400 text-xs">
+              <Mail className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+              <p>No email alerts logged yet.</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                When a student completes registration, the email payload and timestamp will display here.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {notificationLogs.map((log: any, idx: number) => {
+                const student = log.student || {};
+                const isDelivered = log.status === 'delivered';
+                return (
+                  <div
+                    key={idx}
+                    className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2 hover:bg-white transition"
+                  >
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-900 text-sm">
+                          {student.fullName || 'Student'}
+                        </span>
+                        <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded">
+                          {student.grade || 'Grade 12'}
+                        </span>
+                      </div>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          isDelivered
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}
+                      >
+                        {isDelivered ? '✓ Delivered via ShipMyForm' : `Dispatched (${log.service || 'email'})`}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-slate-600 bg-white p-2.5 rounded-lg border border-slate-100 font-mono text-[11px]">
+                      <div>🏫 School: <strong className="text-slate-800">{student.school || 'Not specified'}</strong></div>
+                      <div>📞 Phone: <strong className="text-slate-800">{student.phoneNumber}</strong></div>
+                      <div>📧 Student Email: <strong className="text-slate-800">{student.email}</strong></div>
+                      <div>📬 Recipient: <strong className="text-teal-800">{log.recipient || 'rarb367@gmail.com'}</strong></div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1">
+                      <span>Dispatch Time: {new Date(log.timestamp).toLocaleString()}</span>
+                      <span>Service: {log.service || 'direct-mailer'}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>

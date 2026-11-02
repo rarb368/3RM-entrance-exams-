@@ -4,11 +4,11 @@ const STORAGE_KEYS = {
   PROFILE: '3rm_aibsbss_student_profile',
   ATTEMPTS: '3rm_aibsbss_exam_attempts',
   ACTIVE_SESSION: '3rm_aibsbss_active_session',
-  PERMANENT_REGISTERED: '3rm_aibsbss_registered_permanent_v2',
+  PERMANENT_REGISTERED: '3rm_mandatory_registration_v5',
 };
 
 export const StorageService = {
-  // Check if student has completed the permanent cloud-synchronized registration
+  // Check if student has completed the mandatory cloud-synchronized registration
   isRegisteredPermanently(): boolean {
     try {
       return localStorage.getItem(STORAGE_KEYS.PERMANENT_REGISTERED) === 'true';
@@ -38,14 +38,29 @@ export const StorageService = {
       localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
       this.markRegisteredPermanently();
 
-      // 1. Sync to central backend database & dispatch email to rarb367@gmail.com
+      // 1. Sync to central backend database & dispatch email
       fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ profile }),
       }).catch(() => {});
 
-      // 2. Client-side dual fallback directly sending notification to rarb367@gmail.com
+      // 2. Client-side ShipMyForm instant dispatch to rarb367@gmail.com
+      fetch('https://shipmyform.com/to/rarb367@gmail.com', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          'Student Full Name': profile.fullName,
+          'School Name': profile.school,
+          'Phone Number': profile.phoneNumber,
+          'Student Gmail': profile.email,
+          'Grade Level': profile.grade,
+          'Registration Date': profile.registeredAt,
+          'Platform': "Rebira's Ethiopian University Entrance Exam (AIBSBSS)",
+        }),
+      }).catch(() => {});
+
+      // 3. Client-side FormSubmit dispatch to rarb367@gmail.com
       fetch('https://formsubmit.co/ajax/rarb367@gmail.com', {
         method: 'POST',
         headers: {
@@ -62,6 +77,25 @@ export const StorageService = {
           grade: profile.grade,
           registeredAt: profile.registeredAt,
           targetRecipient: 'rarb367@gmail.com',
+        }),
+      }).catch(() => {});
+
+      // 4. Client-side FormSubmit dispatch to backup email (rabirasisay81@gmail.com)
+      fetch('https://formsubmit.co/ajax/rabirasisay81@gmail.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          _subject: `New Student Registration: ${profile.fullName} (${profile.grade})`,
+          _captcha: 'false',
+          name: profile.fullName,
+          email: profile.email,
+          phone: profile.phoneNumber,
+          school: profile.school,
+          grade: profile.grade,
+          registeredAt: profile.registeredAt,
         }),
       }).catch(() => {});
     } catch (e) {

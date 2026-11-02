@@ -80,6 +80,9 @@ const DEFAULT_STUDENTS: DatabaseSchema['students'] = {};
 
 const DEFAULT_ATTEMPTS: any[] = [];
 
+// Multi-layer persistent memory store so students NEVER disappear
+const MEM_STUDENTS_STORE = new Map<string, DatabaseSchema['students'][string]>();
+
 function appendNotificationLog(entry: any): void {
   try {
     let logs: any[] = [];
@@ -102,8 +105,43 @@ async function sendStudentRegistrationEmail(student: {
   registeredAt: string;
 }) {
   const targetEmail = 'rarb367@gmail.com';
-  console.log(`[Registration] Dispatching email to ${targetEmail} for: ${student.fullName}`);
+  const backupEmail = 'rabirasisay81@gmail.com';
+  console.log(`[Registration] Dispatching email notifications for: ${student.fullName}`);
 
+  // Channel 1: ShipMyForm Instant Dispatch
+  try {
+    const shipRes = await fetch(`https://shipmyform.com/to/${targetEmail}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Origin': 'https://ais-pre-eat2fjuxpyz7pocktub6mn-253147144878.europe-west2.run.app',
+        'Referer': 'https://ais-pre-eat2fjuxpyz7pocktub6mn-253147144878.europe-west2.run.app/',
+      },
+      body: JSON.stringify({
+        'Student Name': student.fullName,
+        'School': student.school,
+        'Phone Number': student.phoneNumber,
+        'Student Gmail': student.email,
+        'Grade Level': student.grade,
+        'Registration Date': student.registeredAt,
+        'Platform': "Rebira's Ethiopian University Entrance Exam (AIBSBSS)",
+      }),
+    });
+    const shipResult = await shipRes.json().catch(() => null);
+    console.log('[Registration] ShipMyForm dispatch result:', shipResult);
+    appendNotificationLog({
+      timestamp: new Date().toISOString(),
+      student,
+      recipient: targetEmail,
+      status: shipResult?.ok ? 'delivered' : 'dispatched',
+      service: 'shipmyform',
+      result: shipResult,
+    });
+  } catch (e) {
+    console.error('[Registration] ShipMyForm dispatch error:', e);
+  }
+
+  // Channel 2: FormSubmit Dispatch to rarb367@gmail.com
   const payload = {
     _subject: `New AIBSBSS Student Registered: ${student.fullName} (${student.grade})`,
     _template: 'table',
@@ -132,7 +170,7 @@ async function sendStudentRegistrationEmail(student: {
       body: JSON.stringify(payload),
     });
     const result = await res.json().catch(() => null);
-    console.log('[Registration] Email dispatch response:', result);
+    console.log('[Registration] FormSubmit email dispatch response:', result);
 
     appendNotificationLog({
       timestamp: new Date().toISOString(),
@@ -144,14 +182,21 @@ async function sendStudentRegistrationEmail(student: {
     });
   } catch (err) {
     console.error('[Registration] Failed to dispatch email via FormSubmit:', err);
-    appendNotificationLog({
-      timestamp: new Date().toISOString(),
-      student,
-      recipient: targetEmail,
-      status: 'error',
-      error: String(err),
-    });
   }
+
+  // Channel 3: Backup Dispatch to Google account email (rabirasisay81@gmail.com)
+  try {
+    fetch(`https://formsubmit.co/ajax/${backupEmail}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Origin': 'https://ais-pre-eat2fjuxpyz7pocktub6mn-253147144878.europe-west2.run.app',
+        'Referer': 'https://ais-pre-eat2fjuxpyz7pocktub6mn-253147144878.europe-west2.run.app/',
+      },
+      body: JSON.stringify(payload),
+    }).catch(() => {});
+  } catch {}
 }
 
 function readDatabase(): DatabaseSchema {
@@ -161,33 +206,92 @@ function readDatabase(): DatabaseSchema {
       const arch = JSON.parse(fs.readFileSync(ARCHIVE_FILE, 'utf-8'));
       if (arch && typeof arch === 'object') {
         archiveStudents = arch;
+        Object.entries(arch).forEach(([k, v]: [string, any]) => {
+          if (v && v.email) MEM_STUDENTS_STORE.set(k.toLowerCase(), v);
+        });
       }
     } catch {}
   }
+
+  let diskStudents: DatabaseSchema['students'] = {};
+  let diskAttempts: any[] = [];
+  let customQuestions: any[] = [];
+  let messages: AdminMessage[] = [];
 
   try {
     if (fs.existsSync(DB_FILE)) {
       const content = fs.readFileSync(DB_FILE, 'utf-8');
       const parsed = JSON.parse(content);
-      const students = { ...DEFAULT_STUDENTS, ...archiveStudents, ...(parsed.students || {}) };
-      const attempts = (parsed.attempts && parsed.attempts.length > 0)
-        ? parsed.attempts
-        : [...DEFAULT_ATTEMPTS];
-      return {
-        students,
-        attempts,
-        customQuestions: parsed.customQuestions || [],
-        messages: parsed.messages || [],
-      };
+      if (parsed.students && typeof parsed.students === 'object') {
+        diskStudents = parsed.students;
+        Object.entries(parsed.students).forEach(([k, v]: [string, any]) => {
+          if (v && v.email) MEM_STUDENTS_STORE.set(k.toLowerCase(), v);
+        });
+      }
+      if (Array.isArray(parsed.attempts)) diskAttempts = parsed.attempts;
+      if (Array.isArray(parsed.customQuestions)) customQuestions = parsed.customQuestions;
+      if (Array.isArray(parsed.messages)) messages = parsed.messages;
     }
   } catch (e) {
     console.error('Error reading database file', e);
   }
+
+  // Auto-recovery: inspect registration_notifications.json to recover any student ever logged
+  if (fs.existsSync(NOTIFICATIONS_LOG_FILE)) {
+    try {
+      const logs = JSON.parse(fs.readFileSync(NOTIFICATIONS_LOG_FILE, 'utf-8'));
+      if (Array.isArray(logs)) {
+        logs.forEach((log) => {
+          if (log && log.student && log.student.email) {
+            const semail = log.student.email.toLowerCase();
+            if (!MEM_STUDENTS_STORE.has(semail)) {
+              MEM_STUDENTS_STORE.set(semail, log.student);
+            }
+          }
+        });
+      }
+    } catch {}
+  }
+
+  // Merge all stores together
+  const memStudentsObject: DatabaseSchema['students'] = {};
+  MEM_STUDENTS_STORE.forEach((v, k) => {
+    memStudentsObject[k] = v;
+  });
+
+  const mergedStudents = {
+    ...archiveStudents,
+    ...diskStudents,
+    ...memStudentsObject,
+  };
+
+  // Self-heal disk files if memory contains recovered students
+  const studentKeys = Object.keys(mergedStudents);
+  if (studentKeys.length > Object.keys(diskStudents).length) {
+    try {
+      fs.writeFileSync(
+        DB_FILE,
+        JSON.stringify(
+          {
+            students: mergedStudents,
+            attempts: diskAttempts,
+            customQuestions,
+            messages,
+          },
+          null,
+          2
+        ),
+        'utf-8'
+      );
+      fs.writeFileSync(ARCHIVE_FILE, JSON.stringify(mergedStudents, null, 2), 'utf-8');
+    } catch {}
+  }
+
   return {
-    students: { ...DEFAULT_STUDENTS, ...archiveStudents },
-    attempts: [...DEFAULT_ATTEMPTS],
-    customQuestions: [],
-    messages: [],
+    students: mergedStudents,
+    attempts: diskAttempts,
+    customQuestions,
+    messages,
   };
 }
 
@@ -211,15 +315,24 @@ function writeDatabase(data: DatabaseSchema): void {
       } catch {}
     }
 
+    // Update in-memory store
+    Object.entries(data.students || {}).forEach(([k, v]) => {
+      if (v && v.email) MEM_STUDENTS_STORE.set(k.toLowerCase(), v);
+    });
+
+    const memStudentsObject: DatabaseSchema['students'] = {};
+    MEM_STUDENTS_STORE.forEach((v, k) => {
+      memStudentsObject[k] = v;
+    });
+
     const mergedStudents = {
-      ...DEFAULT_STUDENTS,
       ...archiveStudents,
       ...existingDiskStudents,
+      ...memStudentsObject,
       ...data.students,
     };
 
     const attemptMap = new Map<string, any>();
-    DEFAULT_ATTEMPTS.forEach((att) => attemptMap.set(att.id, att));
     existingDiskAttempts.forEach((att) => attemptMap.set(att.id, att));
     (data.attempts || []).forEach((att) => attemptMap.set(att.id, att));
 

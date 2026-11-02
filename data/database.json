@@ -1,5 +1,14 @@
 {
-  "students": {},
+  "students": {
+    "rarb368@gmail.com": {
+      "fullName": "Rebira",
+      "phoneNumber": "095555555",
+      "email": "rarb368@gmail.com",
+      "school": "Ambo Ifa Boru Special Boarding Secondary School",
+      "grade": "Grade 11",
+      "registeredAt": "2026-10-31T05:44:48.138Z"
+    }
+  },
   "attempts": [],
   "customQuestions": [],
   "messages": []
