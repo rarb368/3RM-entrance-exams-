@@ -1,15 +1,15 @@
 import React from 'react';
-import { Home, Mail } from 'lucide-react';
+import { Home, BookOpen, Mail } from 'lucide-react';
 
 interface BottomNavProps {
-  currentTab: 'home' | 'contact' | 'admin';
-  onSelectTab: (tab: 'home' | 'contact' | 'admin') => void;
+  currentTab: 'home' | 'notes' | 'contact' | 'admin';
+  onSelectTab: (tab: 'home' | 'notes' | 'contact' | 'admin') => void;
 }
 
 export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onSelectTab }) => {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-      <div className="max-w-md mx-auto grid grid-cols-2 h-14">
+      <div className="max-w-md mx-auto grid grid-cols-3 h-14">
         {/* HOME Tab */}
         <button
           onClick={() => onSelectTab('home')}
@@ -24,6 +24,22 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onSelectTab })
           )}
           <Home className={`w-5 h-5 ${currentTab === 'home' ? 'stroke-[2.5]' : ''}`} />
           <span className="text-[10px] sm:text-[11px] tracking-wider uppercase font-bold">HOME</span>
+        </button>
+
+        {/* NOTES Tab (Between Home and Contact us) */}
+        <button
+          onClick={() => onSelectTab('notes')}
+          className={`flex flex-col items-center justify-center gap-1 transition-all cursor-pointer relative ${
+            currentTab === 'notes'
+              ? 'text-[#00897b] font-bold'
+              : 'text-slate-500 hover:text-slate-800 font-medium'
+          }`}
+        >
+          {currentTab === 'notes' && (
+            <span className="absolute top-0 left-1/4 right-1/4 h-0.5 bg-[#00897b] rounded-full" />
+          )}
+          <BookOpen className={`w-5 h-5 ${currentTab === 'notes' ? 'stroke-[2.5]' : ''}`} />
+          <span className="text-[10px] sm:text-[11px] tracking-wider uppercase font-bold">NOTES</span>
         </button>
 
         {/* CONTACT US Tab */}
@@ -45,3 +61,4 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onSelectTab })
     </nav>
   );
 };
+

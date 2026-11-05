@@ -25,6 +25,7 @@ import { ProfileModal } from './components/ProfileModal';
 import { AdminSection } from './components/AdminSection';
 import { NotificationsModal, AdminNotice } from './components/NotificationsModal';
 import { AiAssistantModal } from './components/AiAssistantModal';
+import { NotesSection } from './components/NotesSection';
 import { getQuestionsForExam, getQuestionsForUnit, getQuestionsForGrade } from './data/allQuestions';
 import { SCHOOL_INFO } from './data/subjectConfig';
 import { BookOpen, GraduationCap, School, User, Sparkles, Globe, ExternalLink } from 'lucide-react';
@@ -52,10 +53,10 @@ export default function App() {
     }
   });
 
-  // Navigation states: 'home' | 'contact' | 'admin'
-  const [currentBottomTab, setCurrentBottomTab] = useState<'home' | 'contact' | 'admin'>('home');
+  // Navigation states: 'home' | 'notes' | 'contact' | 'admin'
+  const [currentBottomTab, setCurrentBottomTab] = useState<'home' | 'notes' | 'contact' | 'admin'>('home');
   const [currentView, setCurrentView] = useState<
-    'dashboard' | 'subject' | 'exam' | 'results' | 'contact' | 'admin'
+    'dashboard' | 'subject' | 'exam' | 'results' | 'notes' | 'contact' | 'admin'
   >('dashboard');
 
   const [selectedSubject, setSelectedSubject] = useState<SubjectId>('biology');
@@ -217,10 +218,12 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSelectBottomTab = (tab: 'home' | 'contact' | 'admin') => {
+  const handleSelectBottomTab = (tab: 'home' | 'notes' | 'contact' | 'admin') => {
     setCurrentBottomTab(tab);
     if (tab === 'home') {
       setCurrentView('dashboard');
+    } else if (tab === 'notes') {
+      setCurrentView('notes');
     } else if (tab === 'contact') {
       setCurrentView('contact');
     } else if (tab === 'admin') {
@@ -296,6 +299,16 @@ export default function App() {
             questions={activeResultData.questions}
             onTryAgain={handleTryAgain}
             onReturnHome={handleReturnHome}
+          />
+        )}
+
+        {currentView === 'notes' && (
+          <NotesSection
+            onBackToHome={() => {
+              setCurrentBottomTab('home');
+              setCurrentView('dashboard');
+            }}
+            onOpenAiBot={() => setIsAiAssistantOpen(true)}
           />
         )}
 
@@ -405,6 +418,18 @@ export default function App() {
               >
                 <BookOpen className="w-5 h-5 text-[#00897b]" />
                 <span>Exam Dashboard</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setIsMenuDrawerOpen(false);
+                  setCurrentBottomTab('notes');
+                  setCurrentView('notes');
+                }}
+                className="w-full p-3 rounded-xl hover:bg-slate-100 text-slate-800 flex items-center gap-3 font-medium transition cursor-pointer text-left"
+              >
+                <GraduationCap className="w-5 h-5 text-[#00897b]" />
+                <span>Rebira's Notes & Units</span>
               </button>
 
               <button
